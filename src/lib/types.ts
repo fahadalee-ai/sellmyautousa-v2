@@ -8,7 +8,7 @@ export type PriceStance = "negotiable" | "firm" | null;
 
 export type CommMode = "chat" | "chat_phone" | "phone";
 
-export type PlanKind = "basic" | "featured" | "bundle";
+export type PlanKind = "package" | "bundle";
 
 export type RelevanceScore = {
   recency: number;
@@ -34,6 +34,8 @@ export type Plan = {
   id: string;
   kind: PlanKind;
   name: string;
+  shortName: string;
+  tagline: string;
   price: number;
   durationDays: number;
   photoLimit: number;
@@ -131,6 +133,14 @@ export type AppNotification = {
   time: string;
   read: boolean;
 };
+
+export function parseAddonIds(value?: string | null): string[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
 
 export const emptyDraft = (plan?: Partial<Pick<ListingDraft, "subscriptionId" | "addonId" | "bundleId">>): ListingDraft => ({
   year: "",

@@ -1,3 +1,7 @@
+import splashScreen from "@/img/splash-screen.jpg";
+import onboard1Dark from "@/img/onboarding_01_dark.jpg";
+import onboard2Dark from "@/img/onboarding_02_dark.jpg";
+import onboard3Dark from "@/img/onboarding_03_dark.jpg";
 import { asset } from "./utils";
 
 /** Local branded photos — always available with the Vite base path. */
@@ -10,11 +14,11 @@ const u = (id: string, w = 2000) =>
 export const FALLBACK_IMAGE = local("intro-2.jpg");
 
 export const IMAGES = {
-  splash: local("intro-splash-alt.jpg"),
+  splash: splashScreen,
   splashAccent: local("auth-car.jpg"),
-  onboard1: local("intro-1.jpg"),
-  onboard2: local("intro-2.jpg"),
-  onboard3: local("intro-3.jpg"),
+  onboard1: onboard1Dark,
+  onboard2: onboard2Dark,
+  onboard3: onboard3Dark,
   auth: local("auth-car.jpg"),
   homeHero: local("home-hero.jpg"),
   emptyInventory: local("intro-3.jpg"),

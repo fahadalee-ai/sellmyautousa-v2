@@ -4,6 +4,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/kit";
 import { useApp } from "@/lib/store";
+import { parseAddonIds } from "@/lib/types";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Checkout · SellMyAuto" }] }),
@@ -20,8 +21,8 @@ function CheckoutScreen() {
   const [loading, setLoading] = useState(false);
   const listing = listings.find((l) => l.id === pendingCheckoutId);
   const plan = plans.find((p) => p.id === (listing?.subscriptionId || selectedPlanId));
-  const addon = addons.find((a) => a.id === (listing?.addonId || selectedAddonId));
-  const total = (plan?.price ?? 0) + (addon?.price ?? 0);
+  const selectedAddons = addons.filter((a) => parseAddonIds(listing?.addonId || selectedAddonId).includes(a.id));
+  const total = (plan?.price ?? 0) + selectedAddons.reduce((sum, a) => sum + a.price, 0);
 
   async function pay() {
     if (!listing) {
@@ -52,12 +53,12 @@ function CheckoutScreen() {
             <span>{plan?.name} plan</span>
             <span>${plan?.price ?? 0}</span>
           </div>
-          {addon && (
-            <div className="flex justify-between">
+          {selectedAddons.map((addon) => (
+            <div key={addon.id} className="flex justify-between">
               <span>{addon.name}</span>
               <span>${addon.price}</span>
             </div>
-          )}
+          ))}
           <div className="flex justify-between border-t border-white/15 pt-2 font-semibold">
             <span>Total</span>
             <span>${total}</span>

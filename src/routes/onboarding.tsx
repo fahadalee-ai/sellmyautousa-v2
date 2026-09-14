@@ -12,24 +12,18 @@ export const Route = createFileRoute("/onboarding")({
 const SLIDES = [
   {
     image: IMAGES.onboard1,
-    focus: "object-[center_42%]",
-    title: "Sell direct.",
-    accent: "No dealer.",
-    subtitle: "Meet real buyers nearby. Keep the money that used to go to a dealership.",
+    title: "Find Your Dream Car",
+    subtitle: "Find the car of your dreams from the world's largest market.",
   },
   {
     image: IMAGES.onboard2,
-    focus: "object-[center_45%]",
-    title: "A listing",
-    accent: "buyers tap.",
-    subtitle: "VIN, photos, video, and specs — built into a listing that looks ready to buy.",
+    title: "View & List Car Features",
+    subtitle: "See the specs that matter — then list yours with the same clarity.",
   },
   {
     image: IMAGES.onboard3,
-    focus: "object-[center_40%]",
-    title: "Get ranked.",
-    accent: "Get offers.",
-    subtitle: "Quality listings earn a Relevance Score and rise to the top of search.",
+    title: "Sell Your Car",
+    subtitle: "Post your ad to interested buyers around the world.",
   },
 ] as const;
 
@@ -67,14 +61,11 @@ function OnboardingScreen() {
     >
       <IntroFrame
         title={slide.title}
-        accent={slide.accent}
         subtitle={slide.subtitle}
         image={slide.image}
-        imageFocus={slide.focus}
-        step={i + 1}
-        steps={4}
+        imageFocus="object-top"
         onSkip={() => finish(user ? "/home" : "/login")}
-        cta={last ? "Create account" : "Continue"}
+        cta={last ? "Get Started" : "Next"}
         onCta={next}
         footer={
           last ? (

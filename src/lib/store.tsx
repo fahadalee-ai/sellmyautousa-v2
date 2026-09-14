@@ -10,7 +10,7 @@ import {
 import { clearStorage, readJson, readStorage, writeJson, writeStorage } from "./storage";
 import { usaSampleDraft } from "./sample-draft";
 import { sellerFor } from "./mock-data";
-import { emptyDraft, type ChatMessage, type Conversation, type Listing, type ListingDraft, type ThemeMode, type User } from "./types";
+import { emptyDraft, parseAddonIds, type ChatMessage, type Conversation, type Listing, type ListingDraft, type ThemeMode, type User } from "./types";
 
 export type Toast = { id: number; title: string; body?: string };
 
@@ -86,7 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("light");
   const [listings, setListings] = useState<Listing[]>(seedListings);
   const [draft, setDraftState] = useState<ListingDraft>(() => emptyDraft());
-  const [selectedPlanId, setSelectedPlanId] = useState("plan-featured");
+  const [selectedPlanId, setSelectedPlanId] = useState("plan-basic");
   const [selectedAddonId, setSelectedAddonId] = useState("");
   const [pendingCheckoutId, setPendingCheckoutId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(seedNotifications);
@@ -266,12 +266,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createListing: (status = "unpaid") => {
         if (!user) throw new Error("Not signed in");
         const plan = seedPlans.find((p) => p.id === draft.subscriptionId || p.id === selectedPlanId);
+        const addonIds = parseAddonIds(draft.addonId || selectedAddonId);
         const created: Listing = {
           ...draft,
           id: `l${Date.now()}`,
           ownerId: user.id,
           status,
-          featured: Boolean(plan?.featured || selectedAddonId === "addon-boost"),
+          featured: Boolean(plan?.featured || addonIds.includes("addon-boost")),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           views: 0,

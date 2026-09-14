@@ -23,7 +23,7 @@ import {
 import { IMAGES } from "@/lib/images";
 import { computeScore, qualityHint } from "@/lib/score";
 import { useApp } from "@/lib/store";
-import type { CommMode, Listing, ListingDraft, PriceStance } from "@/lib/types";
+import { parseAddonIds, type CommMode, type Listing, type ListingDraft, type PriceStance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const ADD_STEPS = [
@@ -766,7 +766,7 @@ function ReviewStep({
 }) {
   const { draft, plans, addons } = useApp();
   const plan = plans.find((p) => p.id === planId);
-  const addon = addons.find((a) => a.id === addonId);
+  const selectedAddons = addons.filter((a) => parseAddonIds(addonId).includes(a.id));
   return (
     <>
       <h2 className="mb-3 text-[17px] font-semibold">Review & Submit</h2>
@@ -805,7 +805,7 @@ function ReviewStep({
       </div>
       <p className="mt-2 text-[13px] text-muted-foreground">
         Plan: {plan?.name ?? "—"}
-        {addon ? ` + ${addon.name}` : ""}
+        {selectedAddons.length ? ` + ${selectedAddons.map((a) => a.name).join(", ")}` : ""}
         {listing ? ` · ${listing.status}` : ""}
       </p>
     </>

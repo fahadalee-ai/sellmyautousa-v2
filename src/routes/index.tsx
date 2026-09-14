@@ -19,13 +19,11 @@ function SplashScreen() {
 
   return (
     <IntroFrame
-      title="Sell your"
-      accent="dream car"
+      title="Sell My Auto USA"
       subtitle="America's FSBO marketplace. No dealer. No markup."
       image={IMAGES.splash}
-      imageFocus="object-[center_40%]"
-      step={0}
-      steps={4}
+      imageFocus="object-center"
+      showSkip
       onSkip={() => {
         markOnboarded();
         navigate({ to: user ? "/home" : "/login", replace: true });

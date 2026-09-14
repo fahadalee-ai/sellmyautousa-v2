@@ -101,7 +101,7 @@ function ChatScreen() {
       </div>
 
       <form
-        className="flex items-center gap-2 border-t border-border bg-background px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        className="flex items-center gap-2 border-t border-border bg-background px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         onSubmit={(e) => {
           e.preventDefault();
           send();
