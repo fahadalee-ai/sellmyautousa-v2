@@ -23,7 +23,7 @@ function servePreviewHtml(): Plugin {
         return;
       }
       try {
-        const html = readFileSync(resolve(process.cwd(), "public/preview.html"), "utf8");
+        const html = readFileSync(resolve(process.cwd(), "preview.html"), "utf8");
         res.statusCode = 200;
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         res.setHeader("Cache-Control", "no-store");
