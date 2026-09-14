@@ -11,6 +11,7 @@ const HIDDEN = new Set([
   "/verify",
   "/checkout",
   "/add-car",
+  "/plans",
   "/payment/success",
   "/payment/cancel",
 ]);
@@ -34,30 +35,30 @@ export function TabBar() {
         to={to as "/home"}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "relative flex min-h-12 flex-1 flex-col items-center justify-center gap-1 py-1.5 text-[12px] font-medium",
+          "relative flex h-[49px] min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium",
           active ? "text-trust" : "text-muted-foreground",
         )}
       >
         {active && <span className="absolute inset-x-6 top-0 h-0.5 bg-trust" />}
-        <Icon size={22} strokeWidth={active ? 2.4 : 1.8} fill={active ? "currentColor" : "none"} />
+        <Icon size={25} strokeWidth={active ? 2.2 : 1.7} fill={active ? "currentColor" : "none"} />
         {label}
       </Link>
     );
   };
 
   return (
-    <nav className="sticky bottom-0 z-40 border-t border-border bg-background pb-[max(0.4rem,env(safe-area-inset-bottom))]">
-      <div className="flex items-stretch">
+    <nav className="sticky bottom-0 z-40 border-t border-border bg-background pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+      <div className="flex min-h-[49px] items-stretch overflow-visible">
         {item("/home", "Home", Home, true)}
         {item("/search", "Search", Search, true)}
         <Link
           to="/plans"
-          className="relative flex min-h-12 flex-1 flex-col items-center justify-center pb-1 text-[12px] font-medium text-primary"
+          className="relative flex h-[49px] min-h-[44px] flex-1 flex-col items-center justify-center text-[10px] font-medium text-primary"
         >
-          <span className="-mt-4 flex h-12 w-12 items-center justify-center bg-primary text-white shadow-md">
-            <Plus size={26} strokeWidth={2.4} />
+          <span className="-mt-2.5 flex h-11 w-11 items-center justify-center bg-primary text-white shadow-md">
+            <Plus size={22} strokeWidth={2.4} />
           </span>
-          <span className="mt-1">Add Car</span>
+          <span className="mt-0.5">Add Car</span>
         </Link>
         {item("/inbox", "Inbox", MessageSquare, true)}
         {item("/profile", "Profile", User, true)}

@@ -8,7 +8,7 @@ import { IMAGES } from "@/lib/images";
 import { cn } from "@/lib/utils";
 
 export const authInputClass =
-  "min-h-12 w-full rounded-none border border-white/15 bg-white/6 px-4 text-base text-white outline-none placeholder:text-white/35 focus:border-trust";
+  "h-11 min-h-11 w-full rounded-none border border-white/15 bg-white/6 px-3.5 text-[17px] text-white outline-none placeholder:text-white/35 focus:border-trust";
 
 export function AuthShell({
   title,
@@ -33,22 +33,22 @@ export function AuthShell({
       <div className="pointer-events-none absolute inset-x-0 top-[22vh] h-[12vh] bg-[#0B0B0F]" />
 
       <div className="relative z-10 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))]">
-        <div className="mb-6 flex items-center gap-3">
+        <div className="mb-5 flex items-center gap-3">
           {showBack && (
             <button
               type="button"
               aria-label="Go back"
               onClick={() => (canGoBack ? router.history.back() : router.navigate({ to: "/login" }))}
-              className="flex h-12 w-12 shrink-0 items-center justify-center border border-white/15 text-white"
+              className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/15 text-white"
             >
-              <ArrowLeft size={20} strokeWidth={2} />
+              <ArrowLeft size={18} strokeWidth={2} />
             </button>
           )}
-          <Logo tone="white" size="md" className="max-w-[14.5rem]" />
+          <Logo tone="white" size="sm" className="max-w-[11rem]" />
         </div>
 
-        <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-white">{title}</h1>
-        {subtitle && <p className="mt-2 text-base leading-relaxed text-white/60">{subtitle}</p>}
+        <h1 className="text-[22px] font-semibold leading-snug tracking-tight text-white">{title}</h1>
+        {subtitle && <p className="mt-1.5 text-[15px] leading-snug text-white/60">{subtitle}</p>}
         <div className="mt-6">{children}</div>
         {footer}
       </div>
@@ -108,7 +108,7 @@ export function SocialAuth({ onContinue }: { onContinue: (provider: "google" | "
         <button
           type="button"
           onClick={() => onContinue("google")}
-          className="inline-flex min-h-12 items-center justify-center gap-2 border border-trust bg-transparent px-3 text-base font-semibold text-trust"
+          className="inline-flex h-11 min-h-11 items-center justify-center gap-1.5 border border-trust bg-transparent px-3 text-[17px] font-semibold text-trust"
         >
           <GoogleMark />
           Google
@@ -116,7 +116,7 @@ export function SocialAuth({ onContinue }: { onContinue: (provider: "google" | "
         <button
           type="button"
           onClick={() => onContinue("apple")}
-          className="inline-flex min-h-12 items-center justify-center gap-2 border border-trust bg-transparent px-3 text-base font-semibold text-trust"
+          className="inline-flex h-11 min-h-11 items-center justify-center gap-1.5 border border-trust bg-transparent px-3 text-[17px] font-semibold text-trust"
         >
           <AppleMark />
           Apple

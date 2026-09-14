@@ -41,7 +41,7 @@ function HomeScreen() {
 
   return (
     <div className="min-h-dvh bg-white pb-10">
-      <section className="relative min-h-[22.5rem] overflow-hidden bg-[#0B0B0F]">
+      <section className="relative min-h-[17.5rem] overflow-hidden bg-[#0B0B0F]">
         <SafeImg
           src={IMAGES.homeHero}
           alt=""
@@ -49,32 +49,32 @@ function HomeScreen() {
         />
         <div className="absolute inset-0 bg-[#0B0B0F]/55" />
         <AppHeader variant="overlay" />
-        <div className="relative flex min-h-[22.5rem] flex-col justify-end px-5 pb-7 pt-24">
-          <p className="text-[13px] font-medium text-white/65">Hi, {firstName}</p>
-          <h1 className="mt-1 max-w-[17rem] text-[30px] font-semibold leading-[1.08] tracking-tight text-white">
+        <div className="relative flex min-h-[17.5rem] flex-col justify-end px-4 pb-5 pt-20">
+          <p className="text-[13px] text-white/65">Hi, {firstName}</p>
+          <h1 className="mt-1 max-w-[16rem] text-[22px] font-semibold leading-snug tracking-tight text-white">
             Sell your car. Keep the profit.
           </h1>
           <Link
             to="/search"
-            className="mt-5 inline-flex h-12 w-fit items-center gap-2 bg-primary px-5 text-[15px] font-semibold text-white"
+            className="mt-3 inline-flex h-11 w-fit items-center gap-1.5 bg-primary px-4 text-[17px] font-semibold text-white"
           >
             Explore marketplace
-            <ArrowRight size={18} strokeWidth={2.2} />
+            <ArrowRight size={16} strokeWidth={2.2} />
           </Link>
         </div>
       </section>
 
-      <section className="grid grid-cols-5 gap-1 px-3 py-5">
+      <section className="grid grid-cols-5 gap-1 px-2 py-3">
         {CATEGORIES.map((c) => (
           <Link
             key={c.id}
             to={c.to}
-            className="flex min-h-16 flex-col items-center justify-center gap-2"
+            className="flex min-h-11 flex-col items-center justify-center gap-1"
           >
-            <span className="flex h-12 w-12 items-center justify-center border border-border text-trust">
-              <CategoryIcon name={c.id} size={22} />
+            <span className="flex h-10 w-10 items-center justify-center border border-border text-trust">
+              <CategoryIcon name={c.id} size={18} />
             </span>
-            <span className="text-center text-[11px] font-medium leading-tight text-foreground">
+            <span className="text-center text-[10px] font-medium leading-tight text-foreground">
               {c.label}
             </span>
           </Link>
@@ -86,7 +86,7 @@ function HomeScreen() {
           <h2 className="text-[13px] font-semibold tracking-[0.14em] text-foreground">
             FEATURED CARS
           </h2>
-          <Link to="/search" className="inline-flex min-h-11 items-center text-[15px] font-semibold text-trust">
+          <Link to="/search" className="inline-flex h-11 items-center text-[15px] font-medium text-trust">
             View all
           </Link>
         </div>
@@ -102,15 +102,15 @@ function HomeScreen() {
         <div className="absolute inset-0 bg-[#0B0B0F]/50" />
         <div className="relative px-4 py-6">
           <p className="text-[13px] font-semibold tracking-[0.14em] text-white/70">LIST YOUR CAR</p>
-          <h3 className="mt-1 max-w-[16rem] text-[22px] font-semibold leading-snug text-white">
+          <h3 className="mt-1 max-w-[16rem] text-[20px] font-semibold leading-snug text-white">
             Get ranked. Get real offers.
           </h3>
-          <p className="mt-2 max-w-xs text-[15px] leading-relaxed text-white/70">
+          <p className="mt-1.5 max-w-xs text-[15px] leading-snug text-white/70">
             Publish a listing buyers actually tap — VIN, photos, and a Relevance Score.
           </p>
           <Link
             to="/plans"
-            className="mt-4 inline-flex min-h-12 items-center gap-2 bg-primary px-5 text-[15px] font-semibold text-white"
+            className="mt-3 inline-flex h-11 items-center gap-1.5 bg-primary px-4 text-[17px] font-semibold text-white"
           >
             Start listing
             <ArrowRight size={18} strokeWidth={2.2} />
@@ -134,7 +134,7 @@ function HomeScreen() {
         <section className="mt-6 px-4 pb-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-[13px] font-semibold tracking-[0.14em] text-foreground">NEAR YOU</h2>
-            <Link to="/search" className="inline-flex min-h-11 items-center text-[15px] font-semibold text-trust">
+            <Link to="/search" className="inline-flex h-11 items-center text-[15px] font-medium text-trust">
               View all
             </Link>
           </div>

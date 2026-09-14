@@ -38,7 +38,7 @@ function CheckoutScreen() {
     <div className="flex min-h-dvh flex-col bg-[#0B0B0F] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-white">
       <Logo tone="white" size="md" className="mb-6 max-w-[14.5rem]" />
       <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50">Stripe Checkout</p>
-      <h1 className="mt-2 text-2xl font-semibold">Complete payment</h1>
+      <h1 className="mt-2 text-[22px] font-semibold">Complete payment</h1>
       <p className="mt-1 text-sm text-white/70">
         External checkout stub — replace with Stripe Checkout / web-view when the API is live.
       </p>

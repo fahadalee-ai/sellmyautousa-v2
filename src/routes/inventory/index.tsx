@@ -35,11 +35,11 @@ function InventoryScreen() {
       <header className="sticky top-0 z-30 flex items-center justify-between bg-background px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
         <div className="flex items-center gap-2">
           <BrandIcon tone="color" size="md" />
-          <h1 className="text-xl font-semibold tracking-tight">My Inventory</h1>
+          <h1 className="text-[17px] font-semibold tracking-tight">My Inventory</h1>
         </div>
         <Link
           to="/plans"
-          className="inline-flex min-h-11 items-center bg-primary px-4 text-[15px] font-semibold text-white"
+          className="inline-flex h-11 items-center bg-primary px-4 text-[17px] font-semibold text-white"
         >
           + Add Car
         </Link>

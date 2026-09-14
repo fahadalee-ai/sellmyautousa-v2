@@ -34,9 +34,9 @@ function PlansScreen() {
   }
 
   return (
-    <div className="min-h-dvh bg-background pb-28">
-      <Header title="Choose a Plan to List Your Car" back fallbackTo="/home" />
-      <div className="no-scrollbar space-y-3 overflow-y-auto px-4">
+    <div className="flex min-h-dvh flex-col bg-background pb-28">
+      <Header title="Choose a plan" back fallbackTo="/home" />
+      <div className="no-scrollbar flex-1 space-y-3 overflow-y-auto px-4 pb-4">
         {plans.map((p) => (
           <Card key={p.id} selected={selectedPlanId === p.id} onClick={() => setSelectedPlanId(p.id)}>
             <div className="flex items-start justify-between gap-3">
@@ -76,7 +76,7 @@ function PlansScreen() {
           })}
         </div>
       </div>
-      <div className="fixed bottom-16 left-1/2 w-full max-w-[480px] -translate-x-1/2 bg-background px-4 py-3">
+      <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 border-t border-border bg-background px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <Button full onClick={continueToAdd}>
           Continue to Add Car
         </Button>

@@ -8,6 +8,7 @@ import {
   seedUsers,
 } from "./mock-data";
 import { clearStorage, readJson, readStorage, writeJson, writeStorage } from "./storage";
+import { usaSampleDraft } from "./sample-draft";
 import { emptyDraft, type Listing, type ListingDraft, type ThemeMode, type User } from "./types";
 
 export type Toast = { id: number; title: string; body?: string };
@@ -214,7 +215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       marketplace: listings.filter((l) => l.status === "paid"),
       draft,
       setDraft: (patch) => setDraftState((d) => ({ ...d, ...patch })),
-      resetDraft: (plan) => setDraftState(emptyDraft(plan)),
+      resetDraft: (plan) => setDraftState(usaSampleDraft(plan)),
       loadDraftFromListing: (listing) => {
         const { id: _id, ownerId: _o, status: _s, featured: _f, createdAt: _c, updatedAt: _u, views: _v, favorites: _fav, chats: _ch, ...rest } = listing;
         setDraftState(rest);

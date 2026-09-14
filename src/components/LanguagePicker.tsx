@@ -25,7 +25,7 @@ export function LanguagePicker({
             type="button"
             onClick={() => onChange(l.id)}
             className={cn(
-              "flex min-h-14 w-full items-center justify-between rounded-xl border px-4 py-3 text-left",
+              "flex h-11 min-h-11 w-full items-center justify-between border px-3.5 text-left",
               selected ? "border-primary bg-primary/5" : "border-border bg-card",
             )}
           >

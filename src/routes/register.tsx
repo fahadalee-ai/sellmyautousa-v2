@@ -63,7 +63,7 @@ function RegisterScreen() {
           autoComplete="new-password"
           onChange={(e) => setConfirm(e.target.value)}
         />
-        <label className="mb-6 flex min-h-12 items-start gap-3 text-[15px] leading-snug text-white/75">
+        <label className="mb-6 flex min-h-11 items-start gap-3 text-[15px] leading-snug text-white/75">
           <input
             type="checkbox"
             checked={agree}

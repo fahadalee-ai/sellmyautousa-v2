@@ -37,7 +37,7 @@ export function RelevanceScore({
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Listing Relevance Score
           </p>
-          <p className={cn("font-semibold tabular-nums text-foreground", compact ? "text-lg" : "text-2xl")}>
+          <p className={cn("font-semibold tabular-nums text-foreground", compact ? "text-[17px]" : "text-[22px]")}>
             {score.total}
             <span className="text-sm font-medium text-muted-foreground">/100</span>
           </p>

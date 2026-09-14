@@ -56,14 +56,14 @@ export function Header({
           <button
             aria-label="Go back"
             onClick={() => (canGoBack ? router.history.back() : router.navigate({ to: fallbackTo as never }))}
-            className="flex h-12 w-12 items-center justify-center border border-border text-foreground hover:bg-muted"
+            className="flex h-11 w-11 items-center justify-center border border-border text-foreground hover:bg-muted"
           >
-            <ArrowLeft size={20} strokeWidth={2} />
+            <ArrowLeft size={18} strokeWidth={2} />
           </button>
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[22px] font-semibold tracking-tight">{title}</h1>
-          {subtitle && <p className="truncate text-[15px] text-muted-foreground">{subtitle}</p>}
+          <h1 className="truncate text-[17px] font-semibold tracking-tight">{title}</h1>
+          {subtitle && <p className="truncate text-[13px] text-muted-foreground">{subtitle}</p>}
         </div>
         {right}
       </div>
@@ -96,7 +96,7 @@ export function Button({
       {...props}
       disabled={props.disabled || loading}
       className={cn(
-        "inline-flex min-h-12 items-center justify-center gap-2 rounded-none px-4 py-3 text-base font-semibold tracking-tight transition-colors disabled:opacity-50",
+        "inline-flex h-11 min-h-11 items-center justify-center gap-1.5 rounded-none px-4 text-[17px] font-semibold tracking-tight transition-colors disabled:opacity-50",
         styles,
         full && "w-full",
         className,
@@ -140,7 +140,7 @@ export function LinkButton({
       params={params}
       search={search}
       className={cn(
-        "inline-flex min-h-12 items-center justify-center gap-2 rounded-none px-4 py-3 text-center text-base font-semibold tracking-tight transition-colors",
+        "inline-flex h-11 min-h-11 items-center justify-center gap-1.5 rounded-none px-4 text-center text-[17px] font-semibold tracking-tight transition-colors",
         styles,
         full && "w-full",
         className,
@@ -221,7 +221,7 @@ export function ScrollTabs<T extends string>({
             type="button"
             onClick={() => onChange?.(item.id)}
             className={cn(
-              "inline-flex min-h-12 items-center justify-center px-4 text-[15px] font-medium",
+              "inline-flex h-11 min-h-11 items-center justify-center px-3.5 text-[15px] font-medium",
               fit ? "min-w-0 flex-1 px-2" : "shrink-0 snap-start",
               active ? "bg-primary text-white" : "border border-border bg-card text-muted-foreground",
             )}
@@ -282,7 +282,7 @@ export function Field({
     <label className="mb-4 block">
       <span
         className={cn(
-          "mb-2 block text-[15px] font-medium",
+          "mb-1.5 block text-[13px] font-medium",
           tone === "dark" ? "text-white/70" : "text-muted-foreground",
         )}
       >
@@ -300,7 +300,7 @@ export function Field({
 }
 
 export const inputClass =
-  "min-h-12 w-full rounded-none border border-border bg-card px-4 text-base text-foreground outline-none placeholder:text-muted-foreground focus:border-trust";
+  "h-11 min-h-11 w-full rounded-none border border-border bg-card px-3.5 text-[17px] text-foreground outline-none placeholder:text-muted-foreground focus:border-trust";
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn(inputClass, props.className)} />;
@@ -330,10 +330,12 @@ export function Select({
   children,
   className,
   disabled,
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  options: optionsProp,
+}: React.SelectHTMLAttributes<HTMLSelectElement> & { options?: SelectOption[] }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const options = useMemo(() => optionsFromChildren(children), [children]);
+  const fromChildren = useMemo(() => optionsFromChildren(children), [children]);
+  const options = optionsProp ?? fromChildren;
   const current = String(value ?? "");
   const selected = options.find((o) => o.value === current);
   const placeholder = options.find((o) => o.value === "")?.label || "Select";
@@ -391,7 +393,7 @@ export function Select({
                 type="button"
                 onClick={() => pick(o.value)}
                 className={cn(
-                  "flex min-h-12 w-full items-center justify-between gap-3 border-b border-border px-1 text-left text-base",
+                  "flex h-11 min-h-11 w-full items-center justify-between gap-3 border-b border-border px-1 text-left text-[17px]",
                   active ? "font-semibold text-primary" : "text-foreground",
                   o.value === "" && "text-muted-foreground",
                 )}
@@ -475,12 +477,12 @@ export function BottomSheet({
         className="w-full max-w-[480px] rounded-none border-t border-border bg-card px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h3 className="text-[22px] font-semibold tracking-tight text-foreground">{title}</h3>
+          <h3 className="text-[17px] font-semibold tracking-tight text-foreground">{title}</h3>
           <button
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="flex h-12 w-12 items-center justify-center text-muted-foreground"
+            className="flex h-11 w-11 items-center justify-center text-muted-foreground"
           >
             <X size={20} />
           </button>
@@ -495,7 +497,7 @@ export function BottomSheet({
 export function Empty({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
   return (
     <div className="border border-dashed border-border bg-card p-8 text-center">
-      <h3 className="text-xl font-semibold tracking-tight text-foreground">{title}</h3>
+      <h3 className="text-[17px] font-semibold tracking-tight text-foreground">{title}</h3>
       <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">{body}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>

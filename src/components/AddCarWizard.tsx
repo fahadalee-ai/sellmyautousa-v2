@@ -11,7 +11,8 @@ import {
   FEATURES,
   FUEL_TYPES,
   MAKES,
-  MODELS,
+  makeForModel,
+  modelsFor,
   STATES,
   TRANSMISSIONS,
   YEARS,
@@ -76,20 +77,35 @@ export function AddCarWizard({ step, mode, listingId, onStep }: Props) {
       if (!draft.year) next.year = "Select a year";
       if (!draft.bodyType) next.bodyType = "Select a body type";
     }
+    if (current === 2 && draft.vin.trim()) {
+      const vin = draft.vin.trim().toUpperCase();
+      if (vin.length !== 17 || !/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
+        next.vin = "Enter a valid 17-character VIN";
+      }
+    }
     if (current === 3) {
       if (!draft.mileage) next.mileage = "Mileage is required";
-      if (!draft.transmission) next.transmission = "Required";
-      if (!draft.fuelType) next.fuelType = "Required";
+      if (!draft.transmission) next.transmission = "Select a transmission";
+      if (!draft.fuelType) next.fuelType = "Select a fuel type";
+      if (!draft.drivetrain) next.drivetrain = "Select a drivetrain";
+      if (!draft.exteriorColor) next.exteriorColor = "Select an exterior color";
     }
     if (current === 4) {
       if (!draft.state) next.state = "Select a state";
       if (!draft.city) next.city = "Select a city";
+      if (!/^\d{5}$/.test(draft.zip.trim())) next.zip = "Enter a 5-digit ZIP code";
+    }
+    if (current === 5 && draft.features.length === 0) {
+      next.features = "Select at least one feature";
     }
     if (current === 6) {
-      if (!draft.price || Number(draft.price) <= 0) next.price = "Enter a valid price";
+      if (!draft.price || Number(draft.price) <= 0) next.price = "Enter a valid asking price";
     }
     if (current === 7) {
-      if (!draft.thumbnail) next.thumbnail = "A hi-res thumbnail is required";
+      if (!draft.thumbnail) next.thumbnail = "A cover photo is required";
+    }
+    if (current === 9 && !draft.commMode) {
+      next.commMode = "Choose how buyers can reach you";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -101,9 +117,12 @@ export function AddCarWizard({ step, mode, listingId, onStep }: Props) {
   }
 
   function submit() {
-    if (!validate(7) || !validate(6) || !validate(1)) {
-      onStep(1);
-      return;
+    const required = [1, 3, 4, 5, 6, 7, 9] as const;
+    for (const s of required) {
+      if (!validate(s)) {
+        onStep(s);
+        return;
+      }
     }
     if (mode === "edit" && listingId) {
       updateListing(listingId, {
@@ -152,13 +171,14 @@ export function AddCarWizard({ step, mode, listingId, onStep }: Props) {
         {step === 1 && <BasicsStep errors={errors} />}
         {step === 2 && (
           <VinStep
+            errors={errors}
             vinState={vinState}
             setVinState={setVinState}
           />
         )}
         {step === 3 && <SpecsStep errors={errors} />}
         {step === 4 && <LocationStep errors={errors} />}
-        {step === 5 && <FeaturesStep />}
+        {step === 5 && <FeaturesStep errors={errors} />}
         {step === 6 && <PricingStep errors={errors} />}
         {step === 7 && (
           <MediaStep
@@ -180,7 +200,7 @@ export function AddCarWizard({ step, mode, listingId, onStep }: Props) {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 border-t border-border bg-background px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 border-t border-border bg-background px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <div className="flex gap-2">
           <Button variant="outline" className="flex-1" onClick={() => onStep(Math.max(1, step - 1))} disabled={step === 1}>
             Back
@@ -202,53 +222,55 @@ export function AddCarWizard({ step, mode, listingId, onStep }: Props) {
 
 function BasicsStep({ errors }: { errors: Record<string, string> }) {
   const { draft, setDraft } = useApp();
-  const models = MODELS[draft.make] ?? [];
+  const models = modelsFor(draft.make);
   return (
     <>
-      <h2 className="mb-4 text-xl font-semibold">Vehicle Basics</h2>
+      <h2 className="mb-4 text-[17px] font-semibold">Vehicle Basics</h2>
+      <Field label="Year" error={errors.year}>
+        <Select
+          value={draft.year}
+          onChange={(e) => setDraft({ year: e.target.value })}
+          options={[{ value: "", label: "Select year" }, ...YEARS.map((y) => ({ value: y, label: y }))]}
+        />
+      </Field>
       <Field label="Make" error={errors.make}>
         <Select
           value={draft.make}
           onChange={(e) => setDraft({ make: e.target.value, model: "" })}
-        >
-          <option value="">Select make</option>
-          {MAKES.map((m) => (
-            <option key={m}>{m}</option>
-          ))}
-        </Select>
+          options={[{ value: "", label: "Select make" }, ...MAKES.map((m) => ({ value: m, label: m }))]}
+        />
       </Field>
-      <Field label="Model" error={errors.model}>
-        <Select value={draft.model} onChange={(e) => setDraft({ model: e.target.value })}>
-          <option value="">Select model</option>
-          {models.map((m) => (
-            <option key={m}>{m}</option>
-          ))}
-        </Select>
+      <Field label="Model" error={errors.model} hint={draft.make ? undefined : "All USA models — pick a make to filter"}>
+        <Select
+          value={draft.model}
+          onChange={(e) => {
+            const model = e.target.value;
+            const inferred = makeForModel(model);
+            setDraft({ model, make: draft.make || inferred || "" });
+          }}
+          options={[{ value: "", label: "Select model" }, ...models.map((m) => ({ value: m, label: m }))]}
+        />
       </Field>
-      <Field label="Year" error={errors.year}>
-        <Select value={draft.year} onChange={(e) => setDraft({ year: e.target.value })}>
-          <option value="">Select year</option>
-          {YEARS.map((y) => (
-            <option key={y}>{y}</option>
-          ))}
-        </Select>
+      <Field label="Trim">
+        <Input value={draft.trim} placeholder="e.g. SS, XLE, Limited" onChange={(e) => setDraft({ trim: e.target.value })} />
       </Field>
       <Field label="Body Type" error={errors.bodyType}>
-        <Select value={draft.bodyType} onChange={(e) => setDraft({ bodyType: e.target.value })}>
-          <option value="">Select body type</option>
-          {BODY_TYPES.map((b) => (
-            <option key={b}>{b}</option>
-          ))}
-        </Select>
+        <Select
+          value={draft.bodyType}
+          onChange={(e) => setDraft({ bodyType: e.target.value })}
+          options={[{ value: "", label: "Select body type" }, ...BODY_TYPES.map((b) => ({ value: b, label: b }))]}
+        />
       </Field>
     </>
   );
 }
 
 function VinStep({
+  errors,
   vinState,
   setVinState,
 }: {
+  errors: Record<string, string>;
   vinState: "idle" | "fail" | "ok";
   setVinState: (s: "idle" | "fail" | "ok") => void;
 }) {
@@ -268,15 +290,15 @@ function VinStep({
   }
   return (
     <>
-      <h2 className="mb-1 text-xl font-semibold">VIN Decode</h2>
+      <h2 className="mb-1 text-[17px] font-semibold">VIN Decode</h2>
       <p className="mb-4 text-sm text-muted-foreground">
         Listings with a decoded VIN earn full Completeness points.
       </p>
-      <Field label="VIN">
+      <Field label="VIN" error={errors.vin} hint="Optional. 17 characters, no I, O, or Q.">
         <Input
           value={draft.vin}
           maxLength={17}
-          placeholder="17-character VIN"
+          placeholder="1G1FH1R79J0147852"
           onChange={(e) => {
             setDraft({ vin: e.target.value.toUpperCase(), vinDecoded: false });
             setVinState("idle");
@@ -317,7 +339,7 @@ function SpecsStep({ errors }: { errors: Record<string, string> }) {
   const { draft, setDraft } = useApp();
   return (
     <>
-      <h2 className="mb-4 text-xl font-semibold">Specs</h2>
+      <h2 className="mb-4 text-[17px] font-semibold">Specs</h2>
       <Field label="Mileage" error={errors.mileage}>
         <Input
           inputMode="numeric"
@@ -342,7 +364,7 @@ function SpecsStep({ errors }: { errors: Record<string, string> }) {
           ))}
         </Select>
       </Field>
-      <Field label="Drivetrain">
+      <Field label="Drivetrain" error={errors.drivetrain}>
         <Select value={draft.drivetrain} onChange={(e) => setDraft({ drivetrain: e.target.value })}>
           <option value="">Select</option>
           {DRIVETRAINS.map((x) => (
@@ -353,7 +375,7 @@ function SpecsStep({ errors }: { errors: Record<string, string> }) {
       <Field label="Engine Size">
         <Input value={draft.engineSize} placeholder="e.g. 2.0L" onChange={(e) => setDraft({ engineSize: e.target.value })} />
       </Field>
-      <Field label="Exterior Color">
+      <Field label="Exterior Color" error={errors.exteriorColor}>
         <Select value={draft.exteriorColor} onChange={(e) => setDraft({ exteriorColor: e.target.value })}>
           <option value="">Select</option>
           {COLORS.map((x) => (
@@ -394,7 +416,7 @@ function LocationStep({ errors }: { errors: Record<string, string> }) {
   const cities = citiesFor(draft.state);
   return (
     <>
-      <h2 className="mb-4 text-xl font-semibold">Location</h2>
+      <h2 className="mb-4 text-[17px] font-semibold">Location</h2>
       <Field label="State" error={errors.state}>
         <Select value={draft.state} onChange={(e) => setDraft({ state: e.target.value, city: "" })}>
           <option value="">Select state</option>
@@ -404,18 +426,26 @@ function LocationStep({ errors }: { errors: Record<string, string> }) {
         </Select>
       </Field>
       <Field label="City" error={errors.city}>
-        <Select value={draft.city} onChange={(e) => setDraft({ city: e.target.value })}>
-          <option value="">Select city</option>
-          {cities.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </Select>
+        <Select
+          value={draft.city}
+          onChange={(e) => setDraft({ city: e.target.value })}
+          options={[{ value: "", label: "Select city" }, ...cities.map((c) => ({ value: c, label: c }))]}
+        />
+      </Field>
+      <Field label="ZIP code" error={errors.zip}>
+        <Input
+          inputMode="numeric"
+          maxLength={5}
+          value={draft.zip}
+          placeholder="75201"
+          onChange={(e) => setDraft({ zip: e.target.value.replace(/\D/g, "").slice(0, 5) })}
+        />
       </Field>
     </>
   );
 }
 
-function FeaturesStep() {
+function FeaturesStep({ errors }: { errors: Record<string, string> }) {
   const { draft, setDraft } = useApp();
   function toggle(f: string) {
     const has = draft.features.includes(f);
@@ -423,7 +453,8 @@ function FeaturesStep() {
   }
   return (
     <>
-      <h2 className="mb-4 text-xl font-semibold">Features</h2>
+      <h2 className="mb-4 text-[17px] font-semibold">Features</h2>
+      {errors.features && <p className="mb-3 text-sm font-medium text-primary">{errors.features}</p>}
       <div className="flex flex-wrap gap-2">
         {FEATURES.map((f) => {
           const on = draft.features.includes(f);
@@ -433,7 +464,7 @@ function FeaturesStep() {
               type="button"
               onClick={() => toggle(f)}
               className={cn(
-                "inline-flex min-h-12 items-center border px-4 text-[15px] font-medium",
+                "inline-flex h-11 min-h-11 items-center border px-3.5 text-[15px] font-medium",
                 on ? "border-primary bg-primary text-white" : "border-border bg-card text-foreground",
               )}
             >
@@ -453,7 +484,7 @@ function PricingStep({ errors }: { errors: Record<string, string> }) {
   }
   return (
     <>
-      <h2 className="mb-4 text-xl font-semibold">Pricing</h2>
+      <h2 className="mb-4 text-[17px] font-semibold">Pricing</h2>
       <Field label="Asking Price" error={errors.price}>
         <Input
           inputMode="numeric"
@@ -530,7 +561,7 @@ function MediaStep({
 
   return (
     <>
-      <h2 className="mb-1 text-xl font-semibold">Media</h2>
+      <h2 className="mb-1 text-[17px] font-semibold">Media</h2>
       <p className="mb-4 text-sm text-muted-foreground">{qualityHint(photoCount)}</p>
       <QualityMeter photos={photoCount} hasVideo={Boolean(draft.video)} />
 
@@ -596,7 +627,7 @@ function HistoryStep() {
   const { draft, setDraft } = useApp();
   return (
     <>
-      <h2 className="mb-1 text-xl font-semibold">History Report</h2>
+      <h2 className="mb-1 text-[17px] font-semibold">History Report</h2>
       <p className="mb-4 text-sm text-muted-foreground">Optional. Link or note a vehicle history report.</p>
       <Field label="Report URL or reference">
         <Input
@@ -618,7 +649,7 @@ function CommStep() {
   ];
   return (
     <>
-      <h2 className="mb-4 text-xl font-semibold">Mode of Communication</h2>
+      <h2 className="mb-4 text-[17px] font-semibold">Mode of Communication</h2>
       <div className="space-y-2">
         {options.map((o) => (
           <button
@@ -655,7 +686,7 @@ function ReviewStep({
   const addon = addons.find((a) => a.id === addonId);
   return (
     <>
-      <h2 className="mb-3 text-xl font-semibold">Review & Submit</h2>
+      <h2 className="mb-3 text-[17px] font-semibold">Review & Submit</h2>
       <AmberBanner>
         Editing this listing after publishing will set it back to Unpaid until you republish.
       </AmberBanner>

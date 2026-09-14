@@ -12,31 +12,31 @@ export function AppHeader({ variant = "light" }: { variant?: "light" | "overlay"
   return (
     <header
       className={cn(
-        "z-30 flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3",
+        "z-30 flex items-center justify-between px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1",
         overlay ? "absolute inset-x-0 top-0 bg-transparent" : "sticky top-0 bg-white",
       )}
     >
-      <Logo tone={overlay ? "white" : "color"} size="md" className="max-w-[15rem]" />
-      <div className="flex items-center gap-1">
+      <Logo tone={overlay ? "white" : "color"} size="sm" className="max-w-[11rem]" />
+      <div className="flex items-center">
         <Link
           to="/search"
           aria-label="Search"
           className={cn(
-            "flex h-12 w-12 items-center justify-center",
+            "flex h-11 w-11 items-center justify-center",
             overlay ? "text-white" : "text-foreground",
           )}
         >
-          <Search size={20} strokeWidth={2} />
+          <Search size={22} strokeWidth={1.8} />
         </Link>
         <Link
           to="/notifications"
           aria-label="Notifications"
           className={cn(
-            "relative flex h-12 w-12 items-center justify-center",
+            "relative flex h-11 w-11 items-center justify-center",
             overlay ? "text-white" : "text-foreground",
           )}
         >
-          <Bell size={20} strokeWidth={2} />
+          <Bell size={22} strokeWidth={1.8} />
           {unread > 0 && <span className="absolute right-2 top-2 h-2 w-2 bg-primary" />}
         </Link>
       </div>

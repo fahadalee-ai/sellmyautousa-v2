@@ -43,7 +43,7 @@ function InventoryDetail() {
           </Chip>
           {listing.featured && <Chip tone="trust">Featured</Chip>}
         </div>
-        <p className="text-2xl font-semibold text-trust">{money(listing.price)}</p>
+        <p className="text-[22px] font-semibold text-trust">{money(listing.price)}</p>
         <p className="text-sm text-muted-foreground">
           {listing.city}, {listing.state} · {Number(listing.mileage || 0).toLocaleString()} mi
         </p>

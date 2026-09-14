@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const heights = {
   xs: "h-9",
   sm: "h-11",
-  md: "h-14",
+  md: "h-11",
   lg: "h-16",
   xl: "h-24",
 } as const;

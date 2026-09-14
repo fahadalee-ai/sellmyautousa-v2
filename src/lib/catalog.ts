@@ -17,37 +17,66 @@ export const MAKES = [
   "Acura",
   "Audi",
   "BMW",
+  "Buick",
+  "Cadillac",
   "Chevrolet",
+  "Chrysler",
+  "Dodge",
   "Ford",
+  "GMC",
   "Honda",
   "Hyundai",
   "Jeep",
+  "Kia",
   "Lexus",
+  "Lincoln",
+  "Mazda",
   "Mercedes-Benz",
   "Nissan",
   "Porsche",
+  "Ram",
+  "Subaru",
   "Tesla",
   "Toyota",
   "Volkswagen",
 ];
 
 export const MODELS: Record<string, string[]> = {
-  Acura: ["ILX", "TLX", "MDX", "RDX"],
-  Audi: ["A4", "A6", "Q5", "Q7"],
-  BMW: ["3 Series", "5 Series", "X3", "X5", "M4"],
-  Chevrolet: ["Malibu", "Equinox", "Silverado", "Camaro"],
-  Ford: ["F-150", "Mustang", "Explorer", "Escape"],
-  Honda: ["Civic", "Accord", "CR-V", "Pilot"],
-  Hyundai: ["Elantra", "Sonata", "Tucson", "Santa Fe"],
-  Jeep: ["Wrangler", "Grand Cherokee", "Cherokee", "Gladiator"],
-  Lexus: ["ES", "RX", "NX", "IS"],
-  "Mercedes-Benz": ["C-Class", "E-Class", "GLE", "GLC"],
-  Nissan: ["Altima", "Rogue", "Sentra", "Frontier"],
-  Porsche: ["911", "Cayenne", "Macan", "Taycan"],
-  Tesla: ["Model 3", "Model Y", "Model S", "Model X"],
-  Toyota: ["Camry", "Corolla", "RAV4", "Tacoma", "Camry Hybrid"],
-  Volkswagen: ["Jetta", "Tiguan", "Atlas", "Golf"],
+  Acura: ["ILX", "TLX", "Integra", "MDX", "RDX"],
+  Audi: ["A4", "A6", "A5", "Q5", "Q7", "Q3"],
+  BMW: ["3 Series", "5 Series", "X3", "X5", "X1", "M4", "M3"],
+  Buick: ["Enclave", "Encore GX", "Envision"],
+  Cadillac: ["CT5", "XT5", "Escalade", "Lyriq"],
+  Chevrolet: ["Malibu", "Equinox", "Silverado 1500", "Camaro", "Traverse", "Tahoe", "Colorado", "Corvette"],
+  Chrysler: ["Pacifica", "300"],
+  Dodge: ["Charger", "Challenger", "Durango", "Hornet"],
+  Ford: ["F-150", "Mustang", "Explorer", "Escape", "Bronco", "Ranger", "Edge", "Maverick", "Expedition"],
+  GMC: ["Sierra 1500", "Terrain", "Acadia", "Yukon", "Canyon"],
+  Honda: ["Civic", "Accord", "CR-V", "Pilot", "HR-V", "Odyssey", "Ridgeline"],
+  Hyundai: ["Elantra", "Sonata", "Tucson", "Santa Fe", "Palisade", "Ioniq 5"],
+  Jeep: ["Wrangler", "Grand Cherokee", "Cherokee", "Gladiator", "Compass", "Wagoneer"],
+  Kia: ["Forte", "K5", "Sportage", "Telluride", "Sorento", "Carnival"],
+  Lexus: ["ES", "RX", "NX", "IS", "GX", "UX"],
+  Lincoln: ["Nautilus", "Aviator", "Navigator", "Corsair"],
+  Mazda: ["Mazda3", "CX-5", "CX-50", "CX-90", "MX-5 Miata"],
+  "Mercedes-Benz": ["C-Class", "E-Class", "GLE", "GLC", "GLA", "S-Class"],
+  Nissan: ["Altima", "Rogue", "Sentra", "Frontier", "Pathfinder", "Murano", "Titan"],
+  Porsche: ["911", "Cayenne", "Macan", "Taycan", "Panamera", "718 Cayman"],
+  Ram: ["1500", "2500", "3500"],
+  Subaru: ["Outback", "Forester", "Crosstrek", "Ascent", "WRX"],
+  Tesla: ["Model 3", "Model Y", "Model S", "Model X", "Cybertruck"],
+  Toyota: ["Camry", "Corolla", "RAV4", "Tacoma", "Highlander", "4Runner", "Tundra", "Prius", "Camry Hybrid"],
+  Volkswagen: ["Jetta", "Tiguan", "Atlas", "Golf", "ID.4", "Taos"],
 };
+
+export function modelsFor(make: string): string[] {
+  if (make && MODELS[make]) return MODELS[make];
+  return [...new Set(Object.values(MODELS).flat())].sort((a, b) => a.localeCompare(b));
+}
+
+export function makeForModel(model: string): string | undefined {
+  return MAKES.find((make) => MODELS[make]?.includes(model));
+}
 
 export const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "DCT"];
 export const FUEL_TYPES = ["Gasoline", "Diesel", "Hybrid", "Plug-in Hybrid", "Electric"];
@@ -138,19 +167,61 @@ export const STATES = [
 ];
 
 export const CITIES: Record<string, string[]> = {
-  California: ["Los Angeles", "San Diego", "San Jose", "San Francisco", "Sacramento"],
-  Texas: ["Houston", "Dallas", "Austin", "San Antonio", "Fort Worth"],
-  Florida: ["Miami", "Orlando", "Tampa", "Jacksonville", "Fort Lauderdale"],
+  Alabama: ["Birmingham", "Huntsville", "Montgomery", "Mobile"],
+  Alaska: ["Anchorage", "Fairbanks", "Juneau"],
+  Arizona: ["Phoenix", "Scottsdale", "Tucson", "Mesa", "Chandler"],
+  Arkansas: ["Little Rock", "Fayetteville", "Fort Smith"],
+  California: ["Los Angeles", "San Diego", "San Jose", "San Francisco", "Sacramento", "Irvine", "Oakland"],
+  Colorado: ["Denver", "Boulder", "Colorado Springs", "Aurora"],
+  Connecticut: ["Hartford", "New Haven", "Stamford"],
+  Delaware: ["Wilmington", "Dover", "Newark"],
+  Florida: ["Miami", "Orlando", "Tampa", "Jacksonville", "Fort Lauderdale", "Naples"],
+  Georgia: ["Atlanta", "Savannah", "Augusta", "Marietta"],
+  Hawaii: ["Honolulu", "Hilo", "Kailua"],
+  Idaho: ["Boise", "Meridian", "Idaho Falls"],
+  Illinois: ["Chicago", "Aurora", "Naperville", "Joliet", "Evanston"],
+  Indiana: ["Indianapolis", "Fort Wayne", "Bloomington"],
+  Iowa: ["Des Moines", "Cedar Rapids", "Iowa City"],
+  Kansas: ["Wichita", "Overland Park", "Kansas City"],
+  Kentucky: ["Louisville", "Lexington", "Bowling Green"],
+  Louisiana: ["New Orleans", "Baton Rouge", "Shreveport"],
+  Maine: ["Portland", "Augusta", "Bangor"],
+  Maryland: ["Baltimore", "Annapolis", "Bethesda"],
+  Massachusetts: ["Boston", "Cambridge", "Worcester"],
+  Michigan: ["Detroit", "Ann Arbor", "Grand Rapids"],
+  Minnesota: ["Minneapolis", "Saint Paul", "Rochester"],
+  Mississippi: ["Jackson", "Gulfport", "Biloxi"],
+  Missouri: ["Kansas City", "St. Louis", "Springfield"],
+  Montana: ["Billings", "Missoula", "Bozeman"],
+  Nebraska: ["Omaha", "Lincoln"],
+  Nevada: ["Las Vegas", "Reno", "Henderson"],
+  "New Hampshire": ["Manchester", "Nashua", "Concord"],
+  "New Jersey": ["Newark", "Jersey City", "Princeton"],
+  "New Mexico": ["Albuquerque", "Santa Fe", "Las Cruces"],
   "New York": ["New York", "Buffalo", "Rochester", "Albany", "Syracuse"],
-  Illinois: ["Chicago", "Aurora", "Naperville", "Joliet"],
-  Georgia: ["Atlanta", "Savannah", "Augusta"],
+  "North Carolina": ["Charlotte", "Raleigh", "Durham", "Asheville"],
+  "North Dakota": ["Fargo", "Bismarck"],
+  Ohio: ["Columbus", "Cleveland", "Cincinnati", "Toledo"],
+  Oklahoma: ["Oklahoma City", "Tulsa"],
+  Oregon: ["Portland", "Eugene", "Salem"],
+  Pennsylvania: ["Philadelphia", "Pittsburgh", "Harrisburg"],
+  "Rhode Island": ["Providence", "Newport"],
+  "South Carolina": ["Charleston", "Columbia", "Greenville"],
+  "South Dakota": ["Sioux Falls", "Rapid City"],
+  Tennessee: ["Nashville", "Memphis", "Knoxville"],
+  Texas: ["Houston", "Dallas", "Austin", "San Antonio", "Fort Worth", "Plano"],
+  Utah: ["Salt Lake City", "Provo", "Park City"],
+  Vermont: ["Burlington", "Montpelier"],
+  Virginia: ["Richmond", "Virginia Beach", "Arlington", "Norfolk"],
   Washington: ["Seattle", "Tacoma", "Bellevue", "Spokane"],
-  Colorado: ["Denver", "Boulder", "Colorado Springs"],
-  Arizona: ["Phoenix", "Scottsdale", "Tucson", "Mesa"],
+  "West Virginia": ["Charleston", "Morgantown"],
+  Wisconsin: ["Milwaukee", "Madison", "Green Bay"],
+  Wyoming: ["Cheyenne", "Jackson"],
 };
 
 export function citiesFor(state: string): string[] {
-  return CITIES[state] ?? ["Metro", "Downtown", "North", "South"];
+  if (state && CITIES[state]) return CITIES[state];
+  return [...new Set(Object.values(CITIES).flat())].sort((a, b) => a.localeCompare(b));
 }
 
 export function decodeVin(vin: string) {

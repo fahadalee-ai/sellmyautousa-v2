@@ -29,12 +29,6 @@ export const Route = createFileRoute("/listing/$id")({
   component: ListingView,
 });
 
-function formatPhone(phone: string) {
-  const d = phone.replace(/\D/g, "");
-  if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
-  return phone;
-}
-
 function ListingView() {
   const { id } = Route.useParams();
   const { listings, favoriteIds, toggleFavorite, user, pushToast } = useApp();
@@ -137,7 +131,7 @@ function ListingView() {
               key={src}
               type="button"
               onClick={() => setPhoto(idx)}
-              className={cn("h-14 w-20 shrink-0 overflow-hidden border-2", idx === photo ? "border-primary" : "border-transparent")}
+              className={cn("h-12 w-[4.5rem] shrink-0 overflow-hidden border-2", idx === photo ? "border-primary" : "border-transparent")}
             >
               <SafeImg src={src} alt="" className="h-full w-full object-cover" />
             </button>
@@ -154,11 +148,11 @@ function ListingView() {
             {listing.status === "unpaid" && <Chip tone="danger">Unpaid</Chip>}
             <Chip tone="muted">{listing.titleStatus} title</Chip>
           </div>
-          <h1 className="mt-2 text-[1.65rem] font-semibold leading-tight tracking-tight text-[#1A1A1A]">
+          <h1 className="mt-2 text-[22px] font-semibold leading-snug tracking-tight text-[#1A1A1A]">
             {listingTitle(listing)}
             {listing.trim ? ` ${listing.trim}` : ""}
           </h1>
-          <p className="mt-1 text-2xl font-semibold text-trust">{money(listing.price)}</p>
+          <p className="mt-1 text-[22px] font-semibold text-trust">{money(listing.price)}</p>
           {listing.priceStance && (
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {listing.priceStance === "firm" ? "Price firm" : "Negotiable"}
@@ -282,13 +276,13 @@ function ListingView() {
       </div>
 
       {listing.status !== "sold" && (
-        <div className="fixed bottom-0 left-1/2 z-40 flex w-full max-w-[480px] -translate-x-1/2 gap-2 border-t border-border bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="fixed bottom-0 left-1/2 z-40 flex w-full max-w-[480px] -translate-x-1/2 gap-2 border-t border-border bg-white px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {showPhone && seller?.phone && (
             <a
               href={`tel:+1${seller.phone.replace(/\D/g, "")}`}
-              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 border border-trust text-sm font-semibold text-trust"
+              className="inline-flex h-11 min-h-11 flex-1 items-center justify-center gap-1.5 border border-trust text-[17px] font-semibold text-trust"
             >
-              <Phone size={16} /> {formatPhone(seller.phone)}
+              <Phone size={16} /> Call
             </a>
           )}
           <Button
