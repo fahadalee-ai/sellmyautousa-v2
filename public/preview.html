@@ -238,7 +238,7 @@
 
     function defaultAppUrl() {
       if (location.protocol === "file:") {
-        return "http://localhost:8080" + APP_BASE;
+        return "http://127.0.0.1:8080" + APP_BASE;
       }
       return location.origin + APP_BASE;
     }
@@ -247,6 +247,11 @@
       try {
         const url = new URL(maybeUrl);
         if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+        if (url.pathname.endsWith("/preview.html") || url.pathname === "/preview.html") {
+          url.pathname = APP_BASE;
+          url.search = "";
+          url.hash = "";
+        }
         return url.toString();
       } catch {
         return null;
