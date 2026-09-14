@@ -8,9 +8,9 @@ type Score = ReturnType<typeof computeScore>;
 
 const ROWS: { key: keyof Omit<Score, "total">; label: string; cap: number }[] = [
   { key: "recency", label: "Recency", cap: SCORE_CAPS.recency },
-  { key: "quality", label: "Listing Quality", cap: SCORE_CAPS.quality },
-  { key: "engagement", label: "Engagement", cap: SCORE_CAPS.engagement },
-  { key: "completeness", label: "Completeness & Accuracy", cap: SCORE_CAPS.completeness },
+  { key: "quality", label: "Quality", cap: SCORE_CAPS.quality },
+  { key: "engagement", label: "Engage", cap: SCORE_CAPS.engagement },
+  { key: "completeness", label: "Complete", cap: SCORE_CAPS.completeness },
 ];
 
 export function RelevanceScore({
@@ -24,36 +24,32 @@ export function RelevanceScore({
   compact?: boolean;
   showHelp?: boolean;
 }) {
-  const [open, setOpen] = useState(Boolean(expanded));
+  const [open, setOpen] = useState(Boolean(expanded) || Boolean(compact));
 
   return (
     <div className="border border-border bg-card">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left"
+        className="flex h-11 w-full items-center justify-between gap-2 px-3 text-left"
       >
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Listing Relevance Score
-          </p>
-          <p className={cn("font-semibold tabular-nums text-foreground", compact ? "text-[17px]" : "text-[22px]")}>
-            {score.total}
-            <span className="text-sm font-medium text-muted-foreground">/100</span>
-          </p>
+        <p className="min-w-0 truncate text-[13px] font-semibold text-foreground">Relevance Score</p>
+        <div className="flex shrink-0 items-baseline gap-1">
+          <span className="text-[17px] font-semibold tabular-nums leading-none text-foreground">{score.total}</span>
+          <span className="text-[13px] font-medium tabular-nums text-muted-foreground">/100</span>
+          <ChevronDown
+            size={16}
+            className={cn("ml-0.5 text-muted-foreground transition-transform", open && "rotate-180")}
+          />
         </div>
-        <ChevronDown
-          size={18}
-          className={cn("shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
-        />
       </button>
       {open && (
-        <div className="space-y-2.5 border-t border-border px-3 py-3">
+        <div className="space-y-2 border-t border-border px-3 py-2.5">
           {ROWS.map((row) => (
             <ScoreBar key={row.key} label={row.label} value={score[row.key]} cap={row.cap} />
           ))}
           {showHelp && (
-            <Link to="/point-notes" className="mt-1 inline-block text-xs font-semibold text-trust">
+            <Link to="/point-notes" className="inline-flex h-8 items-center text-[13px] font-medium text-trust">
               What does this mean?
             </Link>
           )}
@@ -66,16 +62,14 @@ export function RelevanceScore({
 export function ScoreBar({ label, value, cap }: { label: string; value: number; cap: number }) {
   const pct = cap ? Math.min(100, (value / cap) * 100) : 0;
   return (
-    <div>
-      <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-semibold tabular-nums text-foreground">
-          {value}/{cap}
-        </span>
-      </div>
-      <div className="h-1.5 w-full bg-muted">
+    <div className="flex min-w-0 items-center gap-2">
+      <span className="w-[4.25rem] shrink-0 truncate text-[13px] leading-none text-muted-foreground">{label}</span>
+      <div className="h-1.5 min-w-0 flex-1 bg-muted">
         <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
       </div>
+      <span className="w-10 shrink-0 text-right text-[13px] font-semibold tabular-nums leading-none text-foreground">
+        {value}/{cap}
+      </span>
     </div>
   );
 }
@@ -83,10 +77,10 @@ export function ScoreBar({ label, value, cap }: { label: string; value: number; 
 export function QualityMeter({ photos, hasVideo }: { photos: number; hasVideo: boolean }) {
   const pct = Math.min(100, (photos / 50) * 100);
   return (
-    <div className="border border-border bg-card p-3">
-      <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="font-semibold text-foreground">Listing Quality</span>
-        <span className="tabular-nums text-muted-foreground">
+    <div className="border border-border bg-card px-3 py-2.5">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <span className="text-[13px] font-semibold text-foreground">Listing Quality</span>
+        <span className="shrink-0 text-[13px] tabular-nums text-muted-foreground">
           {photos} photo{photos === 1 ? "" : "s"}
           {hasVideo ? " · video" : ""}
         </span>

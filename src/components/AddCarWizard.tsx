@@ -690,33 +690,40 @@ function ReviewStep({
       <AmberBanner>
         Editing this listing after publishing will set it back to Unpaid until you republish.
       </AmberBanner>
-      <article className="mt-4 border border-border bg-card">
-        {draft.thumbnail && <img src={draft.thumbnail} alt="" className="h-44 w-full object-cover" />}
+      <article className="mt-3 border border-border bg-card">
+        {draft.thumbnail && <img src={draft.thumbnail} alt="" className="h-32 w-full object-cover" />}
         <div className="p-3">
-          <div className="flex items-center gap-2">
-            {draft.vinDecoded && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase text-success">
-                <Check size={12} /> VIN verified
-              </span>
-            )}
-          </div>
-          <h3 className="text-lg font-semibold">{listingTitle(draft)}</h3>
-          <p className="text-sm font-semibold text-trust">{money(draft.price)}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          {draft.vinDecoded && (
+            <p className="mb-1 inline-flex items-center gap-1 text-[11px] font-semibold text-success">
+              <Check size={12} /> VIN verified
+            </p>
+          )}
+          <h3 className="truncate text-[17px] font-semibold leading-snug">{listingTitle(draft)}</h3>
+          <p className="mt-0.5 text-[17px] font-semibold text-trust">{money(draft.price)}</p>
+          <p className="mt-1 truncate text-[13px] text-muted-foreground">
             {draft.city}, {draft.state} · {draft.mileage ? `${Number(draft.mileage).toLocaleString()} mi` : "—"}
           </p>
           {draft.features.length > 0 && (
-            <p className="mt-2 text-xs text-muted-foreground">{draft.features.join(" · ")}</p>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {draft.features.slice(0, 4).map((f) => (
+                <Chip key={f} tone="muted">
+                  {f}
+                </Chip>
+              ))}
+              {draft.features.length > 4 && (
+                <Chip tone="muted">+{draft.features.length - 4}</Chip>
+              )}
+            </div>
           )}
         </div>
       </article>
       <div className="mt-3">
-        <RelevanceScore score={score} expanded showHelp />
+        <RelevanceScore score={score} expanded compact showHelp />
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">
+      <p className="mt-2 text-[13px] text-muted-foreground">
         Plan: {plan?.name ?? "—"}
         {addon ? ` + ${addon.name}` : ""}
-        {listing ? ` · current status ${listing.status}` : ""}
+        {listing ? ` · ${listing.status}` : ""}
       </p>
     </>
   );
