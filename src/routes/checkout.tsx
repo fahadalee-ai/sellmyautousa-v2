@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { RequireAuth } from "@/components/RequireAuth";
-import { Logo } from "@/components/Logo";
-import { Button } from "@/components/kit";
+import { Button, Header } from "@/components/kit";
 import { useApp } from "@/lib/store";
 import { parseAddonIds } from "@/lib/types";
 
@@ -36,40 +35,42 @@ function CheckoutScreen() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#0B0B0F] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-white">
-      <Logo tone="white" size="md" className="mb-6 max-w-[14.5rem]" />
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50">Stripe Checkout</p>
-      <h1 className="mt-2 text-[22px] font-semibold">Complete payment</h1>
-      <p className="mt-1 text-sm text-white/70">
-        External checkout stub — replace with Stripe Checkout / web-view when the API is live.
-      </p>
-      <div className="mt-8 border border-white/15 bg-white/5 p-4">
-        <p className="text-sm text-white/70">Listing</p>
-        <p className="font-semibold">
-          {listing ? `${listing.year} ${listing.make} ${listing.model}` : "No listing in session"}
+    <div className="flex min-h-dvh flex-col bg-background pb-28">
+      <Header title="Checkout" back fallbackTo="/inventory" />
+      <div className="flex-1 px-4 pb-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Stripe Checkout</p>
+        <h2 className="mt-2 text-[22px] font-semibold text-foreground">Complete payment</h2>
+        <p className="mt-1 text-[15px] text-muted-foreground">
+          External checkout stub — replace with Stripe Checkout when the API is live.
         </p>
-        <div className="mt-4 space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span>{plan?.name} plan</span>
-            <span>${plan?.price ?? 0}</span>
-          </div>
-          {selectedAddons.map((addon) => (
-            <div key={addon.id} className="flex justify-between">
-              <span>{addon.name}</span>
-              <span>${addon.price}</span>
+        <div className="mt-6 border border-border bg-card p-4">
+          <p className="text-[13px] text-muted-foreground">Listing</p>
+          <p className="text-[17px] font-semibold text-foreground">
+            {listing ? `${listing.year} ${listing.make} ${listing.model}` : "No listing in session"}
+          </p>
+          <div className="mt-4 space-y-2 text-[15px] text-foreground">
+            <div className="flex justify-between">
+              <span>{plan?.name} plan</span>
+              <span>${plan?.price ?? 0}</span>
             </div>
-          ))}
-          <div className="flex justify-between border-t border-white/15 pt-2 font-semibold">
-            <span>Total</span>
-            <span>${total}</span>
+            {selectedAddons.map((addon) => (
+              <div key={addon.id} className="flex justify-between">
+                <span>{addon.name}</span>
+                <span>${addon.price}</span>
+              </div>
+            ))}
+            <div className="flex justify-between border-t border-border pt-2 font-semibold">
+              <span>Total</span>
+              <span>${total}</span>
+            </div>
           </div>
         </div>
       </div>
-      <div className="mt-auto space-y-2">
+      <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 space-y-2 bg-background px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <Button full loading={loading} onClick={pay}>
           Pay ${total}
         </Button>
-        <Button variant="light" full onClick={() => navigate({ to: "/payment/cancel" })}>
+        <Button variant="outline" full onClick={() => navigate({ to: "/payment/cancel" })}>
           Cancel
         </Button>
       </div>
