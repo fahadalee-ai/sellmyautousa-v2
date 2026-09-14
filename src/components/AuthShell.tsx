@@ -1,8 +1,14 @@
 import { useCanGoBack, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, Eye, EyeOff, Lock } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { Logo } from "@/components/Logo";
+import { Field } from "@/components/kit";
+import { SafeImg } from "@/components/SafeImg";
+import { IMAGES } from "@/lib/images";
 import { cn } from "@/lib/utils";
-import { Field, inputClass } from "@/components/kit";
+
+export const authInputClass =
+  "min-h-12 w-full rounded-none border border-white/15 bg-white/6 px-4 text-base text-white outline-none placeholder:text-white/35 focus:border-trust";
 
 export function AuthShell({
   title,
@@ -21,22 +27,31 @@ export function AuthShell({
   const canGoBack = useCanGoBack();
 
   return (
-    <div className="relative min-h-dvh bg-background px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]">
-      {showBack && (
-        <button
-          type="button"
-          aria-label="Go back"
-          onClick={() => (canGoBack ? router.history.back() : router.navigate({ to: "/" }))}
-          className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card text-foreground"
-        >
-          <ArrowLeft size={18} strokeWidth={2} />
-        </button>
-      )}
+    <div className="relative min-h-dvh overflow-hidden bg-[#0B0B0F] text-white">
+      <SafeImg src={IMAGES.auth} alt="" className="pointer-events-none absolute inset-x-0 top-0 h-[34vh] w-full object-cover opacity-40" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[34vh] bg-[#0B0B0F]/55" />
+      <div className="pointer-events-none absolute inset-x-0 top-[22vh] h-[12vh] bg-[#0B0B0F]" />
 
-      <h1 className="text-3xl font-semibold tracking-tight text-foreground">{title}</h1>
-      {subtitle && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>}
-      <div className="mt-6">{children}</div>
-      {footer}
+      <div className="relative z-10 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))]">
+        <div className="mb-6 flex items-center gap-3">
+          {showBack && (
+            <button
+              type="button"
+              aria-label="Go back"
+              onClick={() => (canGoBack ? router.history.back() : router.navigate({ to: "/login" }))}
+              className="flex h-12 w-12 shrink-0 items-center justify-center border border-white/15 text-white"
+            >
+              <ArrowLeft size={20} strokeWidth={2} />
+            </button>
+          )}
+          <Logo tone="white" size="md" className="max-w-[14.5rem]" />
+        </div>
+
+        <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-white">{title}</h1>
+        {subtitle && <p className="mt-2 text-base leading-relaxed text-white/60">{subtitle}</p>}
+        <div className="mt-6">{children}</div>
+        {footer}
+      </div>
     </div>
   );
 }
@@ -49,9 +64,11 @@ export function AuthInput({
   return (
     <div className="relative">
       {icon && (
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{icon}</span>
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/40">
+          {icon}
+        </span>
       )}
-      <input {...props} className={cn(inputClass, icon && "pl-10", className)} />
+      <input {...props} className={cn(authInputClass, icon && "pl-10", className)} />
     </div>
   );
 }
@@ -63,19 +80,14 @@ export function PasswordField({
 }: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & { label: string; error?: string }) {
   const [show, setShow] = useState(false);
   return (
-    <Field label={label} error={error}>
+    <Field label={label} error={error} tone="dark">
       <div className="relative">
-        <AuthInput
-          {...props}
-          type={show ? "text" : "password"}
-          icon={<Lock size={16} strokeWidth={2} />}
-          className="pr-11"
-        />
+        <AuthInput {...props} type={show ? "text" : "password"} className="pr-11" />
         <button
           type="button"
           aria-label={show ? "Hide password" : "Show password"}
           onClick={() => setShow((s) => !s)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground"
+          className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-white/45"
         >
           {show ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
         </button>
@@ -84,27 +96,27 @@ export function PasswordField({
   );
 }
 
-export function SocialAuth({ onContinue }: { onContinue: () => void }) {
+export function SocialAuth({ onContinue }: { onContinue: (provider: "google" | "apple") => void }) {
   return (
     <>
-      <div className="my-5 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />
+      <div className="my-6 flex items-center gap-3 text-[13px] font-medium text-white/40">
+        <span className="h-px flex-1 bg-white/12" />
         or continue with
-        <span className="h-px flex-1 bg-border" />
+        <span className="h-px flex-1 bg-white/12" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          onClick={onContinue}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-3 text-sm font-semibold text-foreground hover:bg-muted"
+          onClick={() => onContinue("google")}
+          className="inline-flex min-h-12 items-center justify-center gap-2 border border-trust bg-transparent px-3 text-base font-semibold text-trust"
         >
           <GoogleMark />
           Google
         </button>
         <button
           type="button"
-          onClick={onContinue}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-3 text-sm font-semibold text-foreground hover:bg-muted"
+          onClick={() => onContinue("apple")}
+          className="inline-flex min-h-12 items-center justify-center gap-2 border border-trust bg-transparent px-3 text-base font-semibold text-trust"
         >
           <AppleMark />
           Apple

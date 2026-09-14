@@ -1,554 +1,463 @@
-export type Role = "rbt" | "bcba" | "field_staff" | "admin";
-
-export type User = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  role: Role;
-  bacbNumber?: string;
-};
-
-export type Supervisor = {
-  id: string;
-  name: string;
-  credential: string;
-  initials: string;
-};
-
-export type FieldworkEntry = {
-  id: string;
-  date: string;
-  activityType: string;
-  client: string;
-  startTime: string;
-  endTime: string;
-  hours: number;
-  notes: string;
-  status: "pending" | "approved";
-};
-
-export type SupervisionSession = {
-  id: string;
-  date: string;
-  time?: string;
-  startTime?: string;
-  endTime?: string;
-  durationHours: number;
-  sessionType: string;
-  notes: string;
-  topics?: string;
-  supervisorId: string;
-  status: "scheduled" | "requested" | "pending" | "approved";
-};
-
-export type ComplianceItem = {
-  id: string;
-  name: string;
-  status: "current" | "due_soon" | "missing" | "expired";
-  detail: string;
-  expiresAt?: string;
-  documentId?: string;
-  remind: boolean;
-  category: string;
-};
-
-export type AppDocument = {
-  id: string;
-  name: string;
-  uploadedAt: string;
-  status: "approved" | "pending" | "missing" | "expiring" | "rejected";
-  category: string;
-  expiresAt?: string;
-  previewUrl?: string;
-};
-
-export type FormTemplate = {
-  id: string;
-  name: string;
-  description: string;
-  fields: { id: string; label: string; type: "text" | "textarea" | "date" | "select"; options?: string[] }[];
-};
-
-export type FormRecord = {
-  id: string;
-  templateId: string;
-  name: string;
-  description: string;
-  status: "todo" | "pending" | "approved" | "rejected";
-  submittedAt?: string;
-  values: Record<string, string>;
-  signature?: string;
-  signedName?: string;
-};
-
-export type AppNotification = {
-  id: string;
-  type: "warning" | "info" | "error";
-  text: string;
-  time: string;
-  read: boolean;
-  href: string;
-};
-
-export type ActivityItem = {
-  id: string;
-  text: string;
-  time: string;
-  tone: "blue" | "orange";
-};
-
-export const FIELDWORK_REQUIRED = 80;
-export const SUPERVISION_REQUIRED = 10;
-
-export const ACTIVITY_TYPES = [
-  "Direct client session",
-  "Group supervision prep",
-  "Program review",
-  "Independent fieldwork",
-  "Other",
-] as const;
-
-export const SESSION_TYPES = ["Individual", "Group", "Observation"] as const;
-
-export const DOCUMENT_CATEGORIES = [
-  { id: "cpr", label: "CPR certification" },
-  { id: "rbt", label: "BACB RBT certification" },
-  { id: "background", label: "Background check" },
-  { id: "supervision-contract", label: "Supervision contract" },
-  { id: "hipaa", label: "HIPAA training" },
-  { id: "other", label: "Other" },
-] as const;
+import { IMAGES } from "./images";
+import type { Addon, AppNotification, Conversation, Listing, Plan, User } from "./types";
+import { emptyDraft } from "./types";
 
 export const seedUsers: User[] = [
   {
     id: "u1",
-    firstName: "Maya",
-    lastName: "Chen",
-    email: "maya@ontopaba.com",
-    phone: "(303) 555-0142",
-    password: "Training1",
-    role: "rbt",
-    bacbNumber: "RBT-482913",
+    fullName: "Alex Rivera",
+    email: "alex@sellmyauto.com",
+    phone: "5552018844",
+    password: "DriveDirect1",
+    role: "user",
+    verified: true,
+    subscriptionId: "plan-featured",
+    addonIds: [],
   },
   {
-    id: "u2",
-    firstName: "Rafael",
-    lastName: "Alvarez",
-    email: "rafael@ontopaba.com",
-    phone: "(303) 555-0198",
-    password: "Training1",
-    role: "bcba",
-    bacbNumber: "1-14-16220",
+    id: "u-maya",
+    fullName: "Maya Chen",
+    email: "maya@sellmyauto.com",
+    phone: "5125550188",
+    password: "DriveDirect1",
+    role: "user",
+    verified: true,
+    addonIds: [],
   },
   {
-    id: "u3",
-    firstName: "Jordan",
-    lastName: "Lee",
-    email: "jordan@ontopaba.com",
-    phone: "(303) 555-0166",
-    password: "Training1",
-    role: "field_staff",
+    id: "u-derek",
+    fullName: "Derek Holt",
+    email: "derek@sellmyauto.com",
+    phone: "7205550144",
+    password: "DriveDirect1",
+    role: "user",
+    verified: true,
+    addonIds: [],
+  },
+  {
+    id: "u-sofia",
+    fullName: "Sofia Alvarez",
+    email: "sofia@sellmyauto.com",
+    phone: "3055550190",
+    password: "DriveDirect1",
+    role: "user",
+    verified: true,
+    addonIds: [],
+  },
+  {
+    id: "u-marcus",
+    fullName: "Marcus Webb",
+    email: "marcus@sellmyauto.com",
+    phone: "6025550172",
+    password: "DriveDirect1",
+    role: "user",
+    verified: true,
+    addonIds: [],
   },
   {
     id: "u-admin",
-    firstName: "Avery",
-    lastName: "Admin",
-    email: "admin@ontopaba.com",
-    phone: "(303) 555-0100",
-    password: "Training1",
+    fullName: "Admin User",
+    email: "admin@sellmyautousa.com",
+    phone: "5550000000",
+    password: "AdminDemo1",
     role: "admin",
+    verified: true,
+    addonIds: [],
   },
 ];
 
-export const seedSupervisor: Supervisor = {
-  id: "sup1",
-  name: "Dr. R. Alvarez",
-  credential: "BCBA",
-  initials: "RA",
-};
+export function sellerFor(ownerId: string): User | undefined {
+  return seedUsers.find((u) => u.id === ownerId);
+}
 
-export const seedFieldwork: FieldworkEntry[] = [
+export const seedPlans: Plan[] = [
   {
-    id: "fw1",
-    date: "2026-08-24",
-    activityType: "Direct client session",
-    client: "Client J.M.",
-    startTime: "09:00",
-    endTime: "12:00",
-    hours: 3,
-    notes: "Manding and intraverbal targets. Two new mands independently.",
-    status: "approved",
+    id: "plan-basic",
+    kind: "basic",
+    name: "Basic",
+    price: 29,
+    durationDays: 30,
+    photoLimit: 15,
+    featured: false,
+    includes: ["15 photos", "Standard placement", "In-app inbox", "30-day listing"],
   },
   {
-    id: "fw2",
-    date: "2026-08-22",
-    activityType: "Program review",
-    client: "Client A.R.",
-    startTime: "13:00",
-    endTime: "15:00",
-    hours: 2,
-    notes: "Updated probe data and revised prompt fading steps.",
-    status: "approved",
+    id: "plan-featured",
+    kind: "featured",
+    name: "Featured",
+    price: 79,
+    durationDays: 30,
+    photoLimit: 40,
+    featured: true,
+    includes: ["40 photos", "Featured placement", "Homepage boost", "30-day listing"],
   },
   {
-    id: "fw3",
-    date: "2026-08-20",
-    activityType: "Independent fieldwork",
-    client: "Module 4",
-    startTime: "18:00",
-    endTime: "19:30",
-    hours: 1.5,
-    notes: "Reviewed measurement and graphing modules.",
-    status: "pending",
-  },
-  {
-    id: "fw4",
-    date: "2026-08-18",
-    activityType: "Direct client session",
-    client: "Client J.M.",
-    startTime: "09:30",
-    endTime: "12:30",
-    hours: 3,
-    notes: "NET in playroom; high rates of independent requests.",
-    status: "approved",
+    id: "plan-bundle",
+    kind: "bundle",
+    name: "Bundle",
+    price: 129,
+    durationDays: 60,
+    photoLimit: 60,
+    featured: true,
+    includes: ["60 photos", "Featured + addon boosts", "Video slot", "60-day listing"],
   },
 ];
 
-export const seedSupervision: SupervisionSession[] = [
+export const seedAddons: Addon[] = [
   {
-    id: "sv-next",
-    date: "2026-08-29",
-    time: "14:00",
-    durationHours: 1,
-    sessionType: "Individual",
-    notes: "Monthly restricted-hours review",
-    supervisorId: "sup1",
-    status: "scheduled",
-  },
-  {
-    id: "sv1",
-    date: "2026-08-15",
-    startTime: "14:00",
-    endTime: "15:30",
-    durationHours: 1.5,
-    sessionType: "Individual",
-    topics: "Graphing, feedback on session notes",
-    notes: "",
-    supervisorId: "sup1",
-    status: "approved",
-  },
-  {
-    id: "sv2",
-    date: "2026-08-08",
-    startTime: "10:00",
-    endTime: "11:30",
-    durationHours: 1.5,
-    sessionType: "Observation",
-    topics: "Live observation of Client J.M.",
-    notes: "",
-    supervisorId: "sup1",
-    status: "approved",
-  },
-  {
-    id: "sv3",
-    date: "2026-08-01",
-    startTime: "13:00",
-    endTime: "15:00",
-    durationHours: 2,
-    sessionType: "Individual",
-    topics: "Ethics and documentation",
-    notes: "",
-    supervisorId: "sup1",
-    status: "approved",
-  },
-  {
-    id: "sv4",
-    date: "2026-07-25",
-    startTime: "14:00",
-    endTime: "16:00",
-    durationHours: 2,
-    sessionType: "Group",
-    topics: "Group case review",
-    notes: "",
-    supervisorId: "sup1",
-    status: "approved",
+    id: "addon-boost",
+    name: "Add Featured Boost",
+    price: 25,
+    description: "Pin your listing higher in Search for 7 days.",
   },
 ];
 
-export const seedDocuments: AppDocument[] = [
-  {
-    id: "doc1",
-    name: "CPR_card_2025.pdf",
-    uploadedAt: "2026-03-12",
-    status: "expiring",
-    category: "cpr",
-    expiresAt: "2026-09-07",
-  },
-  {
-    id: "doc2",
-    name: "RBT_certificate.pdf",
-    uploadedAt: "2026-01-08",
-    status: "approved",
-    category: "rbt",
-    expiresAt: "2027-01-08",
-  },
-  {
-    id: "doc3",
-    name: "Background_check.pdf",
-    uploadedAt: "2026-08-20",
-    status: "pending",
-    category: "background",
-  },
+function listing(
+  partial: Partial<Listing> & Pick<Listing, "id" | "ownerId" | "year" | "make" | "model" | "price" | "thumbnail" | "status">,
+): Listing {
+  return {
+    ...emptyDraft(),
+    trim: "",
+    bodyType: "Sedan",
+    vin: "",
+    vinDecoded: false,
+    mileage: "42000",
+    transmission: "Automatic",
+    fuelType: "Gasoline",
+    drivetrain: "FWD",
+    engineSize: "2.0L",
+    exteriorColor: "Black",
+    interiorColor: "Black",
+    seats: "5",
+    doors: "4",
+    state: "California",
+    city: "Los Angeles",
+    features: ["Backup Camera", "Apple CarPlay"],
+    priceStance: "negotiable",
+    gallery: [],
+    video: "",
+    historyReport: "",
+    commMode: "chat_phone",
+    featured: false,
+    createdAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    updatedAt: new Date().toISOString(),
+    views: 0,
+    favorites: 0,
+    chats: 0,
+    subscriptionId: "plan-featured",
+    addonId: "",
+    bundleId: "",
+    titleStatus: "Clean",
+    owners: "1",
+    accidents: "0",
+    zip: "90012",
+    listedLabel: "Listed 2 days ago",
+    ...partial,
+  };
+}
+
+export const seedListings: Listing[] = [
+  listing({
+    id: "l1",
+    ownerId: "u1",
+    year: "2023",
+    make: "BMW",
+    model: "M4",
+    trim: "Competition",
+    bodyType: "Coupe",
+    price: "72900",
+    priceStance: "firm",
+    thumbnail: IMAGES.bmwGallery[0],
+    gallery: IMAGES.bmwGallery.slice(1),
+    vin: "WBS33AZ03PCL12345",
+    vinDecoded: true,
+    mileage: "8400",
+    transmission: "Automatic",
+    fuelType: "Gasoline",
+    drivetrain: "RWD",
+    engineSize: "3.0L Twin-Turbo I6",
+    horsepower: "503 hp",
+    exteriorColor: "Isle of Man Green",
+    interiorColor: "Black Merino",
+    seats: "4",
+    doors: "2",
+    mpgCity: "16",
+    mpgHwy: "23",
+    status: "paid",
+    featured: true,
+    views: 186,
+    favorites: 14,
+    chats: 5,
+    features: [
+      "Leather Seats",
+      "Navigation",
+      "Heated Seats",
+      "Premium Audio",
+      "Carbon Fiber Package",
+      "Adaptive Cruise",
+      "Backup Camera",
+      "Apple CarPlay",
+    ],
+    highlights: ["One owner", "Dealer serviced", "No accidents", "M Driver’s Package"],
+    city: "San Diego",
+    state: "California",
+    zip: "92101",
+    titleStatus: "Clean",
+    owners: "1",
+    accidents: "0",
+    historyReport: "Carfax — 0 accidents, 3 service records",
+    listedLabel: "Listed 2 days ago",
+    description:
+      "Single-owner 2023 M4 Competition in Isle of Man Green. Always garaged in San Diego, BMW scheduled maintenance at Hoehn BMW. Carbon-bucket delete with regular sports seats, M Driver’s Package, and the 503-hp S58. Tires have 70% tread. Clean Carfax, no stories — priced to sell to a private buyer.",
+  }),
+  listing({
+    id: "l2",
+    ownerId: "u1",
+    year: "2020",
+    make: "Toyota",
+    model: "Camry Hybrid",
+    trim: "XLE",
+    price: "24998",
+    thumbnail: IMAGES.camryGallery[0],
+    gallery: IMAGES.camryGallery.slice(1),
+    vin: "4T1C31AK5LU123890",
+    vinDecoded: false,
+    mileage: "12500",
+    fuelType: "Hybrid",
+    engineSize: "2.5L I4 Hybrid",
+    horsepower: "208 hp",
+    exteriorColor: "Celestial Silver",
+    interiorColor: "Ash",
+    mpgCity: "51",
+    mpgHwy: "53",
+    status: "unpaid",
+    views: 42,
+    favorites: 3,
+    chats: 1,
+    state: "New York",
+    city: "New York",
+    zip: "10011",
+    features: ["Backup Camera", "Apple CarPlay", "Heated Seats", "Blind Spot Monitor", "Sunroof"],
+    highlights: ["Low miles", "Hybrid", "NYC garage kept"],
+    listedLabel: "Draft · unpaid",
+    description:
+      "2020 Camry Hybrid XLE with 12,500 miles. One NYC owner, garage-kept in Chelsea. Battery health checked last month. Needs republish after an edit — listing is saved as Unpaid.",
+  }),
+  listing({
+    id: "l3",
+    ownerId: "u1",
+    year: "2018",
+    make: "Honda",
+    model: "Civic",
+    trim: "EX",
+    price: "16400",
+    thumbnail: IMAGES.honda,
+    gallery: [IMAGES.honda, IMAGES.camry, IMAGES.white],
+    mileage: "61000",
+    engineSize: "1.5L Turbo",
+    horsepower: "174 hp",
+    mpgCity: "32",
+    mpgHwy: "42",
+    status: "sold",
+    views: 90,
+    favorites: 6,
+    chats: 2,
+    city: "Los Angeles",
+    zip: "90034",
+    listedLabel: "Sold last week",
+    description: "Sold to a local buyer. Kept here as a record of a completed private-party sale.",
+  }),
+  listing({
+    id: "l4",
+    ownerId: "u-maya",
+    year: "2024",
+    make: "Tesla",
+    model: "Model 3",
+    trim: "Long Range",
+    price: "38990",
+    thumbnail: IMAGES.teslaGallery[0],
+    gallery: IMAGES.teslaGallery.slice(1),
+    vin: "5YJ3E1EA5RF123456",
+    vinDecoded: true,
+    fuelType: "Electric",
+    drivetrain: "AWD",
+    engineSize: "Dual Motor",
+    horsepower: "346 hp",
+    exteriorColor: "Pearl White",
+    interiorColor: "Black",
+    mpgCity: "134 MPGe",
+    mpgHwy: "126 MPGe",
+    mileage: "6200",
+    status: "paid",
+    featured: true,
+    views: 310,
+    favorites: 28,
+    chats: 9,
+    state: "Texas",
+    city: "Austin",
+    zip: "78701",
+    features: ["Autopilot", "Premium Audio", "Heated Seats", "Glass Roof", "Navigation", "Wireless Charging"],
+    highlights: ["FSD-ready hardware", "White interior delete", "20\" Induction"],
+    listedLabel: "Listed 5 days ago",
+    description:
+      "2024 Model 3 Long Range AWD. Austin one-owner, Supercharged mostly on home 48A. 19\" factory aero plus 20\" Induction set included. Clean title, no body work. Range test last week: 312 miles at 70% highway.",
+  }),
+  listing({
+    id: "l5",
+    ownerId: "u-derek",
+    year: "2021",
+    make: "Ford",
+    model: "F-150",
+    trim: "Lariat",
+    bodyType: "Truck",
+    price: "41500",
+    thumbnail: IMAGES.truckGallery[0],
+    gallery: IMAGES.truckGallery.slice(1),
+    vin: "1FTFW1E85MFA23456",
+    vinDecoded: true,
+    mileage: "28000",
+    drivetrain: "4WD",
+    engineSize: "3.5L EcoBoost V6",
+    horsepower: "400 hp",
+    exteriorColor: "Antimatter Blue",
+    interiorColor: "Black Leather",
+    seats: "5",
+    doors: "4",
+    mpgCity: "18",
+    mpgHwy: "24",
+    status: "paid",
+    views: 154,
+    favorites: 11,
+    chats: 4,
+    state: "Colorado",
+    city: "Denver",
+    zip: "80205",
+    features: ["Tow Package", "Leather Seats", "Backup Camera", "Apple CarPlay", "Heated Seats", "Navigation", "Blind Spot Monitor"],
+    highlights: ["Max Recline", "Pro Power Onboard", "Spray-in bedliner"],
+    listedLabel: "Listed 1 week ago",
+    description:
+      "2021 F-150 Lariat SuperCrew 4x4. Colorado truck — undercoated, bedlined, 7,200-lb tow package. No hail. Service at Mountain States Ford. Ready for a trailered boat or a ski weekend.",
+  }),
+  listing({
+    id: "l6",
+    ownerId: "u-sofia",
+    year: "2019",
+    make: "Porsche",
+    model: "911",
+    trim: "Carrera",
+    bodyType: "Coupe",
+    price: "98900",
+    priceStance: "firm",
+    thumbnail: IMAGES.porscheGallery[0],
+    gallery: IMAGES.porscheGallery.slice(1),
+    vin: "WP0AA2A99KS123450",
+    vinDecoded: true,
+    drivetrain: "RWD",
+    engineSize: "3.0L Twin-Turbo Flat-6",
+    horsepower: "379 hp",
+    exteriorColor: "GT Silver",
+    interiorColor: "Black Leather",
+    seats: "4",
+    doors: "2",
+    mileage: "18600",
+    mpgCity: "20",
+    mpgHwy: "26",
+    status: "paid",
+    featured: true,
+    views: 402,
+    favorites: 33,
+    chats: 7,
+    state: "Florida",
+    city: "Miami",
+    zip: "33139",
+    features: ["Leather Seats", "Premium Audio", "Navigation", "Sport Chrono", "PASM", "Backup Camera"],
+    highlights: ["Sport Chrono", "PDK", "Two keys", "Window sticker"],
+    listedLabel: "Listed yesterday",
+    historyReport: "Porsche Official History — no paintwork",
+    description:
+      "2019 911 Carrera (992) in GT Silver. Miami car, ceramic-coated, stored indoors May–October. PDK, Sport Chrono, PASM. 18,600 miles. Books, two keys, and the original window sticker in the glovebox.",
+  }),
+  listing({
+    id: "l7",
+    ownerId: "u-marcus",
+    year: "2022",
+    make: "Jeep",
+    model: "Wrangler",
+    trim: "Rubicon",
+    bodyType: "SUV",
+    price: "44800",
+    thumbnail: IMAGES.jeep,
+    gallery: [IMAGES.jeep, ...IMAGES.truckGallery.slice(1, 4)],
+    vin: "1C4HJXFG4NW123789",
+    vinDecoded: true,
+    drivetrain: "4WD",
+    engineSize: "3.6L V6",
+    horsepower: "285 hp",
+    exteriorColor: "Sarge Green",
+    interiorColor: "Black",
+    seats: "5",
+    doors: "4",
+    mileage: "21400",
+    mpgCity: "17",
+    mpgHwy: "23",
+    status: "paid",
+    views: 98,
+    favorites: 8,
+    chats: 2,
+    state: "Arizona",
+    city: "Phoenix",
+    zip: "85004",
+    features: ["Tow Package", "Backup Camera", "Apple CarPlay", "Navigation", "Leather Seats"],
+    highlights: ["Steel bumpers", "35s", "Lockers"],
+    listedLabel: "Listed 4 days ago",
+    description:
+      "2022 Wrangler Unlimited Rubicon. Phoenix private seller. Factory lockers, 35s on beadlocks, steel bumpers. No rust. Soft top plus a hard top in the garage — buyer can take both.",
+  }),
 ];
 
-export const seedCompliance: ComplianceItem[] = [
+export const seedConversations: Conversation[] = [
   {
     id: "c1",
-    name: "CPR certification",
-    status: "due_soon",
-    detail: "Expires in 12 days",
-    expiresAt: "2026-09-07",
-    documentId: "doc1",
-    remind: true,
-    category: "cpr",
+    listingId: "l1",
+    listingTitle: "2023 BMW M4 Competition",
+    listingThumb: IMAGES.bmwGallery[0],
+    peerName: "Jordan Cole",
+    lastMessage: "Is the price firm if I come this Saturday?",
+    lastAt: "12m",
+    unread: 2,
   },
   {
     id: "c2",
-    name: "BACB RBT certification",
-    status: "current",
-    detail: "Active",
-    expiresAt: "2027-01-08",
-    documentId: "doc2",
-    remind: true,
-    category: "rbt",
-  },
-  {
-    id: "c3",
-    name: "Background check",
-    status: "current",
-    detail: "Active — pending latest upload",
-    documentId: "doc3",
-    remind: true,
-    category: "background",
-  },
-  {
-    id: "c4",
-    name: "Supervision contract",
-    status: "missing",
-    detail: "Missing document",
-    remind: true,
-    category: "supervision-contract",
-  },
-  {
-    id: "c5",
-    name: "HIPAA training",
-    status: "current",
-    detail: "Active",
-    expiresAt: "2027-02-01",
-    remind: false,
-    category: "hipaa",
-  },
-];
-
-export const seedTemplates: FormTemplate[] = [
-  {
-    id: "ft1",
-    name: "Monthly fieldwork attestation",
-    description: "Confirm restricted and unrestricted hours for the month.",
-    fields: [
-      { id: "month", label: "Month", type: "text" },
-      { id: "restricted", label: "Restricted hours", type: "text" },
-      { id: "unrestricted", label: "Unrestricted hours", type: "text" },
-      { id: "notes", label: "Notes", type: "textarea" },
-    ],
-  },
-  {
-    id: "ft2",
-    name: "Incident report",
-    description: "Document a session incident for supervisor review.",
-    fields: [
-      { id: "date", label: "Date", type: "date" },
-      { id: "client", label: "Client / context", type: "text" },
-      {
-        id: "severity",
-        label: "Severity",
-        type: "select",
-        options: ["Low", "Moderate", "High"],
-      },
-      { id: "summary", label: "What happened", type: "textarea" },
-    ],
-  },
-  {
-    id: "ft3",
-    name: "Supervision agreement",
-    description: "Acknowledge your supervision contract terms.",
-    fields: [
-      { id: "supervisor", label: "Supervisor name", type: "text" },
-      { id: "start", label: "Start date", type: "date" },
-    ],
-  },
-];
-
-export const seedForms: FormRecord[] = [
-  {
-    id: "f-todo",
-    templateId: "ft1",
-    name: "Monthly fieldwork attestation",
-    description: "Confirm restricted and unrestricted hours for the month.",
-    status: "todo",
-    values: {},
-  },
-  {
-    id: "f1",
-    templateId: "ft3",
-    name: "Supervision agreement",
-    description: "Acknowledge your supervision contract terms.",
-    status: "approved",
-    submittedAt: "2026-07-02",
-    values: { supervisor: "Dr. R. Alvarez", start: "2026-07-01" },
-    signedName: "Maya Chen",
-  },
-  {
-    id: "f2",
-    templateId: "ft2",
-    name: "Incident report",
-    description: "Document a session incident for supervisor review.",
-    status: "pending",
-    submittedAt: "2026-08-19",
-    values: {
-      date: "2026-08-18",
-      client: "Client J.M.",
-      severity: "Low",
-      summary: "Client dropped materials; redirected successfully.",
-    },
-    signedName: "Maya Chen",
+    listingId: "l2",
+    listingTitle: "2020 Toyota Camry Hybrid",
+    listingThumb: IMAGES.camryGallery[0],
+    peerName: "Priya Shah",
+    lastMessage: "Can you send a video of the backup camera?",
+    lastAt: "2h",
+    unread: 0,
   },
 ];
 
 export const seedNotifications: AppNotification[] = [
   {
     id: "n1",
-    type: "warning",
-    text: "CPR certification expires in 12 days",
-    time: "2 hours ago",
+    title: "New offer interest",
+    body: "Jordan viewed your 2023 BMW M4 and sent a message.",
+    time: "12m",
     read: false,
-    href: "/compliance/c1",
   },
   {
     id: "n2",
-    type: "info",
-    text: "Supervision session Friday at 2:00 PM",
-    time: "Yesterday",
+    title: "Listing quality tip",
+    body: "Add a video to your Camry listing for +5 Quality bonus.",
+    time: "1d",
     read: false,
-    href: "/supervision",
   },
   {
     id: "n3",
-    type: "info",
-    text: "Session note approved",
-    time: "2 hours ago",
+    title: "Payment reminder",
+    body: "Your Camry Hybrid is Unpaid — republish to go live.",
+    time: "2d",
     read: true,
-    href: "/fieldwork/fw1",
-  },
-  {
-    id: "n4",
-    type: "error",
-    text: "Supervision contract is missing",
-    time: "3 days ago",
-    read: false,
-    href: "/compliance/c4",
   },
 ];
-
-export const seedActivity: ActivityItem[] = [
-  { id: "a1", text: "Session note approved", time: "2 hours ago", tone: "blue" },
-  { id: "a2", text: "Fieldwork logged — 3.0 hrs", time: "Yesterday", tone: "orange" },
-  { id: "a3", text: "Supervision signed off", time: "3 days ago", tone: "blue" },
-];
-
-export const ONBOARDING = [
-  {
-    title: "Log fieldwork in seconds",
-    body: "Track session hours, activity details, and your progress toward BACB certification requirements — all from your phone.",
-    image:
-      "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=1600&q=80",
-    alt: "Clinician working with a child during a session",
-  },
-  {
-    title: "Never miss a supervision session",
-    body: "See your assigned supervisor, schedule sessions, and track supervision hours with built-in sign-off approval.",
-    image:
-      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1600&q=80",
-    alt: "Supervisor reviewing notes with a colleague",
-  },
-  {
-    title: "Compliance made simple",
-    body: "Get reminders before certifications expire and know exactly what's missing — no more last-minute scrambling.",
-    image:
-      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80",
-    alt: "Organized certification documents on a desk",
-  },
-  {
-    title: "Your entire ABA career, organized",
-    body: "Documents, forms, e-signatures, and reports — everything BACB certification requires, always within reach.",
-    image:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80",
-    alt: "Professional using a phone to stay organized",
-  },
-] as const;
-
-export function roleLabel(role: Role) {
-  if (role === "rbt") return "RBT";
-  if (role === "bcba") return "BCBA / Supervisor";
-  if (role === "field_staff") return "Field staff";
-  return "Admin";
-}
-
-export function formatDate(iso: string) {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
-
-export function formatDateLong(iso: string) {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-export function formatTime(hhmm: string) {
-  const [h, m] = hhmm.split(":").map(Number);
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-}
-
-export function todayIso() {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-}
-
-export function greeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-export function initials(first: string, last: string) {
-  return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
-}
-
-export function categoryLabel(id: string) {
-  return DOCUMENT_CATEGORIES.find((c) => c.id === id)?.label ?? id;
-}

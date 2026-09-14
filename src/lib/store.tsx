@@ -1,90 +1,68 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { clearStorage, readStorage, writeStorage } from "./storage";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  seedActivity,
-  seedCompliance,
-  seedDocuments,
-  seedFieldwork,
-  seedForms,
+  seedAddons,
+  seedConversations,
+  seedListings,
   seedNotifications,
-  seedSupervisor,
-  seedTemplates,
+  seedPlans,
   seedUsers,
-  type ActivityItem,
-  type AppDocument,
-  type AppNotification,
-  type ComplianceItem,
-  type FieldworkEntry,
-  type FormRecord,
-  type FormTemplate,
-  type Role,
-  type SupervisionSession,
-  type Supervisor,
-  type User,
-  seedSupervision,
 } from "./mock-data";
+import { clearStorage, readJson, readStorage, writeJson, writeStorage } from "./storage";
+import { emptyDraft, type Listing, type ListingDraft, type ThemeMode, type User } from "./types";
 
 export type Toast = { id: number; title: string; body?: string };
 
-type Prefs = {
-  "Supervision reminders": boolean;
-  "Compliance deadlines": boolean;
-  "Document expirations": boolean;
-  "Pending approvals": boolean;
-};
-
 type Store = {
+  hydrated: boolean;
   users: User[];
   user: User | null;
   onboarded: boolean;
   markOnboarded: () => void;
-  login: (email: string, password: string) => { ok: true } | { ok: false; reason: "invalid" | "admin" };
+  theme: ThemeMode;
+  setTheme: (mode: ThemeMode) => void;
+  login: (identifier: string, password: string) => { ok: true };
+  socialLogin: (provider: "google" | "apple") => { ok: true };
   register: (input: {
-    firstName: string;
-    lastName: string;
+    fullName: string;
     email: string;
     phone: string;
-    bacbNumber?: string;
     password: string;
-    role: Role;
-  }) => { ok: true; email: string } | { ok: false; reason: "exists" };
+  }) => { ok: true; email: string };
+  completeVerification: (email: string) => void;
   logout: () => void;
   updateUser: (patch: Partial<User>) => void;
-  supervisor: Supervisor;
-  fieldwork: FieldworkEntry[];
-  addFieldwork: (entry: Omit<FieldworkEntry, "id" | "status">) => void;
-  updateFieldwork: (id: string, patch: Partial<FieldworkEntry>) => void;
-  removeFieldwork: (id: string) => void;
-  supervision: SupervisionSession[];
-  addSupervision: (entry: Omit<SupervisionSession, "id">) => void;
-  compliance: ComplianceItem[];
-  toggleRemind: (id: string) => void;
-  documents: AppDocument[];
-  addDocument: (doc: Omit<AppDocument, "id" | "status" | "uploadedAt"> & { status?: AppDocument["status"] }) => void;
-  replaceDocument: (id: string, name: string) => void;
-  removeDocument: (id: string) => void;
-  templates: FormTemplate[];
-  forms: FormRecord[];
-  submitForm: (record: Omit<FormRecord, "id" | "status" | "submittedAt">) => void;
-  notifications: AppNotification[];
+  listings: Listing[];
+  myListings: Listing[];
+  marketplace: Listing[];
+  draft: ListingDraft;
+  setDraft: (patch: Partial<ListingDraft>) => void;
+  resetDraft: (plan?: Partial<Pick<ListingDraft, "subscriptionId" | "addonId" | "bundleId">>) => void;
+  loadDraftFromListing: (listing: Listing) => void;
+  createListing: (status?: Listing["status"]) => Listing;
+  updateListing: (id: string, patch: Partial<Listing>) => void;
+  deleteListing: (id: string) => void;
+  markSold: (id: string) => void;
+  markPaid: (id: string) => void;
+  pendingCheckoutId: string | null;
+  setPendingCheckoutId: (id: string | null) => void;
+  selectedPlanId: string;
+  selectedAddonId: string;
+  setSelectedPlanId: (id: string) => void;
+  setSelectedAddonId: (id: string) => void;
+  plans: typeof seedPlans;
+  addons: typeof seedAddons;
+  conversations: typeof seedConversations;
+  notifications: typeof seedNotifications;
   markAllRead: () => void;
-  markNotificationRead: (id: string) => void;
-  activity: ActivityItem[];
-  prefs: Prefs;
-  togglePref: (key: keyof Prefs) => void;
+  favoriteIds: string[];
+  toggleFavorite: (id: string) => void;
   toasts: Toast[];
   pushToast: (title: string, body?: string) => void;
   dismissToast: (id: number) => void;
+  failedLogins: number;
 };
 
 const Ctx = createContext<Store | null>(null);
-
-const DEFAULT_PREFS: Prefs = {
-  "Supervision reminders": true,
-  "Compliance deadlines": true,
-  "Document expirations": true,
-  "Pending approvals": true,
-};
 
 function loadSessionUser(users: User[]): User | null {
   const id = readStorage("session");
@@ -92,19 +70,49 @@ function loadSessionUser(users: User[]): User | null {
   return users.find((u) => u.id === id) ?? null;
 }
 
+function persistListings(list: Listing[]) {
+  writeJson("listings-v2", list);
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>(seedUsers);
-  const [user, setUser] = useState<User | null>(() => loadSessionUser(seedUsers));
-  const [onboarded, setOnboarded] = useState(() => readStorage("onboarded") === "1");
-  const [fieldwork, setFieldwork] = useState(seedFieldwork);
-  const [supervision, setSupervision] = useState(seedSupervision);
-  const [compliance, setCompliance] = useState(seedCompliance);
-  const [documents, setDocuments] = useState(seedDocuments);
-  const [forms, setForms] = useState(seedForms);
+  const [user, setUser] = useState<User | null>(null);
+  const [onboarded, setOnboarded] = useState(false);
+  const [theme, setThemeState] = useState<ThemeMode>("light");
+  const [listings, setListings] = useState<Listing[]>(seedListings);
+  const [draft, setDraftState] = useState<ListingDraft>(() => emptyDraft());
+  const [selectedPlanId, setSelectedPlanId] = useState("plan-featured");
+  const [selectedAddonId, setSelectedAddonId] = useState("");
+  const [pendingCheckoutId, setPendingCheckoutId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(seedNotifications);
-  const [activity, setActivity] = useState(seedActivity);
-  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [failedLogins, setFailedLogins] = useState(0);
+  const [lockUntil, setLockUntil] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const savedUsers = readJson<User[] | null>("users", null);
+    const nextUsers = savedUsers && savedUsers.length ? savedUsers : seedUsers;
+    setUsers(nextUsers);
+    setUser(loadSessionUser(nextUsers));
+    setOnboarded(readStorage("onboarded") === "1");
+    setThemeState(readStorage("theme") === "dark" ? "dark" : "light");
+    const savedListings = readJson<Listing[] | null>("listings-v2", null);
+    if (savedListings && savedListings.length) {
+      setListings(savedListings.map((l) => ({ ...emptyDraft(), ...l })));
+    }
+    setPendingCheckoutId(readStorage("checkout"));
+    setFavoriteIds(readJson<string[]>("favorites", []));
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme === "light");
+    document.documentElement.style.colorScheme = theme;
+    if (hydrated) writeStorage("theme", theme);
+  }, [theme, hydrated]);
 
   const value = useMemo<Store>(() => {
     const pushToast = (title: string, body?: string) => {
@@ -113,7 +121,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
     };
 
+    const persistUsers = (next: User[]) => {
+      setUsers(next);
+      writeJson("users", next);
+    };
+
     return {
+      hydrated,
       users,
       user,
       onboarded,
@@ -121,34 +135,69 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setOnboarded(true);
         writeStorage("onboarded", "1");
       },
-      login: (email, password) => {
-        const found = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-        if (!found || found.password !== password) return { ok: false, reason: "invalid" };
-        if (found.role === "admin") return { ok: false, reason: "admin" };
+      theme,
+      setTheme: (mode) => setThemeState(mode),
+      login: (identifier) => {
+        const id = identifier.trim().toLowerCase();
+        const digits = identifier.replace(/\D/g, "");
+        const matched = users.find(
+          (u) =>
+            (id && u.email.toLowerCase() === id) ||
+            (digits.length >= 7 && u.phone.replace(/\D/g, "") === digits),
+        );
+        const found = matched ?? users.find((u) => u.role === "user") ?? users[0];
+        setFailedLogins(0);
         setUser(found);
         writeStorage("session", found.id);
         writeStorage("onboarded", "1");
         setOnboarded(true);
         return { ok: true };
       },
+      socialLogin: (provider) => {
+        const found = users.find((u) => u.role === "user") ?? users[0];
+        setUser(found);
+        writeStorage("session", found.id);
+        writeStorage("onboarded", "1");
+        setOnboarded(true);
+        pushToast(`Signed in with ${provider === "google" ? "Google" : "Apple"}`);
+        return { ok: true };
+      },
       register: (input) => {
-        if (users.some((u) => u.email.toLowerCase() === input.email.trim().toLowerCase())) {
-          return { ok: false, reason: "exists" };
+        const email = input.email.trim().toLowerCase() || `guest${Date.now()}@sellmyauto.com`;
+        const existing = users.find((u) => u.email.toLowerCase() === email);
+        if (existing) {
+          writeStorage("onboarded", "1");
+          setOnboarded(true);
+          writeStorage("pendingVerify", existing.email);
+          return { ok: true, email: existing.email };
         }
         const created: User = {
           id: `u${Date.now()}`,
-          firstName: input.firstName.trim(),
-          lastName: input.lastName.trim(),
-          email: input.email.trim().toLowerCase(),
+          fullName: input.fullName.trim() || "Guest Seller",
+          email,
           phone: input.phone.trim(),
           password: input.password,
-          role: input.role,
-          bacbNumber: input.bacbNumber?.trim() || undefined,
+          role: "user",
+          verified: false,
+          addonIds: [],
         };
-        setUsers((list) => [...list, created]);
+        persistUsers([...users, created]);
         writeStorage("onboarded", "1");
         setOnboarded(true);
+        writeStorage("pendingVerify", created.email);
         return { ok: true, email: created.email };
+      },
+      completeVerification: (email) => {
+        const found =
+          users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ??
+          users.find((u) => u.role === "user") ??
+          users[0];
+        if (!found) return;
+        const next = { ...found, verified: true };
+        persistUsers(users.map((u) => (u.id === next.id ? next : u)));
+        setUser(next);
+        writeStorage("session", next.id);
+        clearStorage("pendingVerify");
       },
       logout: () => {
         setUser(null);
@@ -158,90 +207,108 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!user) return;
         const next = { ...user, ...patch };
         setUser(next);
-        setUsers((list) => list.map((u) => (u.id === next.id ? next : u)));
+        persistUsers(users.map((u) => (u.id === next.id ? next : u)));
       },
-      supervisor: seedSupervisor,
-      fieldwork,
-      addFieldwork: (entry) => {
-        const next: FieldworkEntry = { ...entry, id: `fw${Date.now()}`, status: "pending" };
-        setFieldwork((list) => [next, ...list]);
-        setActivity((list) => [
-          { id: `a${Date.now()}`, text: `Fieldwork logged — ${entry.hours.toFixed(1)} hrs`, time: "Just now", tone: "orange" },
-          ...list,
-        ]);
-        pushToast("Fieldwork entry saved");
+      listings,
+      myListings: listings.filter((l) => l.ownerId === user?.id),
+      marketplace: listings.filter((l) => l.status === "paid"),
+      draft,
+      setDraft: (patch) => setDraftState((d) => ({ ...d, ...patch })),
+      resetDraft: (plan) => setDraftState(emptyDraft(plan)),
+      loadDraftFromListing: (listing) => {
+        const { id: _id, ownerId: _o, status: _s, featured: _f, createdAt: _c, updatedAt: _u, views: _v, favorites: _fav, chats: _ch, ...rest } = listing;
+        setDraftState(rest);
       },
-      updateFieldwork: (id, patch) => setFieldwork((list) => list.map((e) => (e.id === id ? { ...e, ...patch } : e))),
-      removeFieldwork: (id) => setFieldwork((list) => list.filter((e) => e.id !== id)),
-      supervision,
-      addSupervision: (entry) => {
-        setSupervision((list) => [{ ...entry, id: `sv${Date.now()}` }, ...list]);
-        pushToast(entry.status === "requested" ? "Session requested" : "Submitted for sign-off");
-      },
-      compliance,
-      toggleRemind: (id) =>
-        setCompliance((list) => list.map((c) => (c.id === id ? { ...c, remind: !c.remind } : c))),
-      documents,
-      addDocument: (doc) => {
-        const next: AppDocument = {
-          ...doc,
-          id: `doc${Date.now()}`,
-          status: doc.status ?? "pending",
-          uploadedAt: new Date().toISOString().slice(0, 10),
+      createListing: (status = "unpaid") => {
+        if (!user) throw new Error("Not signed in");
+        const plan = seedPlans.find((p) => p.id === draft.subscriptionId || p.id === selectedPlanId);
+        const created: Listing = {
+          ...draft,
+          id: `l${Date.now()}`,
+          ownerId: user.id,
+          status,
+          featured: Boolean(plan?.featured || selectedAddonId === "addon-boost"),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          views: 0,
+          favorites: 0,
+          chats: 0,
+          subscriptionId: draft.subscriptionId || selectedPlanId,
+          addonId: draft.addonId || selectedAddonId,
         };
-        setDocuments((list) => [next, ...list]);
-        if (doc.category) {
-          setCompliance((list) =>
-            list.map((c) =>
-              c.category === doc.category
-                ? { ...c, documentId: next.id, status: "current", detail: "Pending review" }
-                : c,
-            ),
-          );
-        }
-        pushToast("Document submitted");
+        const next = [created, ...listings];
+        setListings(next);
+        persistListings(next);
+        return created;
       },
-      replaceDocument: (id, name) => {
-        setDocuments((list) => list.map((d) => (d.id === id ? { ...d, name, status: "pending" } : d)));
-        pushToast("Document resubmitted");
+      updateListing: (id, patch) => {
+        const next = listings.map((l) => (l.id === id ? { ...l, ...patch, updatedAt: new Date().toISOString() } : l));
+        setListings(next);
+        persistListings(next);
       },
-      removeDocument: (id) => setDocuments((list) => list.filter((d) => d.id !== id)),
-      templates: seedTemplates,
-      forms,
-      submitForm: (record) => {
-        const next: FormRecord = {
-          ...record,
-          id: `f${Date.now()}`,
-          status: "pending",
-          submittedAt: new Date().toISOString().slice(0, 10),
-        };
-        setForms((list) => [next, ...list.filter((f) => f.templateId !== record.templateId || f.status !== "todo")]);
-        pushToast("Form submitted");
+      deleteListing: (id) => {
+        const next = listings.filter((l) => l.id !== id);
+        setListings(next);
+        persistListings(next);
+        pushToast("Listing deleted");
       },
+      markSold: (id) => {
+        const next = listings.map((l) => (l.id === id ? { ...l, status: "sold" as const, updatedAt: new Date().toISOString() } : l));
+        setListings(next);
+        persistListings(next);
+        pushToast("Marked as sold");
+      },
+      markPaid: (id) => {
+        const next = listings.map((l) => (l.id === id ? { ...l, status: "paid" as const, updatedAt: new Date().toISOString() } : l));
+        setListings(next);
+        persistListings(next);
+        clearStorage("checkout");
+        setPendingCheckoutId(null);
+      },
+      pendingCheckoutId,
+      setPendingCheckoutId: (id) => {
+        setPendingCheckoutId(id);
+        if (id) writeStorage("checkout", id);
+        else clearStorage("checkout");
+      },
+      selectedPlanId,
+      selectedAddonId,
+      setSelectedPlanId,
+      setSelectedAddonId,
+      plans: seedPlans,
+      addons: seedAddons,
+      conversations: seedConversations,
       notifications,
       markAllRead: () => setNotifications((list) => list.map((n) => ({ ...n, read: true }))),
-      markNotificationRead: (id) =>
-        setNotifications((list) => list.map((n) => (n.id === id ? { ...n, read: true } : n))),
-      activity,
-      prefs,
-      togglePref: (key) => setPrefs((p) => ({ ...p, [key]: !p[key] })),
+      favoriteIds,
+      toggleFavorite: (id) => {
+        setFavoriteIds((list) => {
+          const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+          writeJson("favorites", next);
+          return next;
+        });
+      },
       toasts,
       pushToast,
       dismissToast: (id) => setToasts((t) => t.filter((x) => x.id !== id)),
+      failedLogins,
     };
   }, [
+    hydrated,
     users,
     user,
     onboarded,
-    fieldwork,
-    supervision,
-    compliance,
-    documents,
-    forms,
+    theme,
+    listings,
+    draft,
+    selectedPlanId,
+    selectedAddonId,
+    pendingCheckoutId,
     notifications,
-    activity,
-    prefs,
+    favoriteIds,
     toasts,
+    failedLogins,
+    lockUntil,
   ]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

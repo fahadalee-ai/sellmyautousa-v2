@@ -1,30 +1,37 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { IntroFrame } from "@/components/IntroFrame";
+import { IMAGES } from "@/lib/images";
+import { useApp } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Project Start Here" },
-      {
-        name: "description",
-        content: "Clean mobile app starter. This is the starting point for a new project.",
-      },
+      { title: "Sell My Auto USA" },
+      { name: "description", content: "List it. Price it. Sell it direct." },
     ],
   }),
-  component: StartScreen,
+  component: SplashScreen,
 });
 
-function StartScreen() {
+function SplashScreen() {
+  const { markOnboarded, user } = useApp();
+  const navigate = useNavigate();
+
   return (
-    <div className="flex min-h-dvh flex-col justify-center px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
-      <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-        Clean Mobile App Starter
-      </p>
-      <h1 className="mt-3 text-[2rem] font-semibold leading-tight tracking-tight text-foreground">
-        Project Start Here
-      </h1>
-      <p className="mt-3 max-w-[17.5rem] text-[15px] leading-relaxed text-muted-foreground">
-        This is the starting point for a new project.
-      </p>
-    </div>
+    <IntroFrame
+      title="Sell your"
+      accent="dream car"
+      subtitle="America's FSBO marketplace. No dealer. No markup."
+      image={IMAGES.splash}
+      imageFocus="object-[center_40%]"
+      step={0}
+      steps={4}
+      onSkip={() => {
+        markOnboarded();
+        navigate({ to: user ? "/home" : "/login", replace: true });
+      }}
+      cta="Get Started"
+      onCta={() => navigate({ to: "/onboarding", replace: true })}
+    />
   );
 }

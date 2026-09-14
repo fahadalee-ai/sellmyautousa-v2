@@ -1,24 +1,30 @@
 import { Link, useCanGoBack, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, ChevronRight, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { ArrowLeft, Check, ChevronDown, ChevronRight, X } from "lucide-react";
+import {
+  Children,
+  isValidElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 export function Screen({
   children,
   className,
-  dark,
   padded = true,
 }: {
   children: ReactNode;
   className?: string;
-  dark?: boolean;
   padded?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "min-h-dvh",
-        dark ? "bg-ink text-white" : "bg-background text-foreground",
+        "min-h-dvh bg-background text-foreground",
         padded && "px-4 py-4",
         className,
       )}
@@ -33,43 +39,31 @@ export function Header({
   subtitle,
   back = true,
   right,
-  dark,
-  fallbackTo = "/",
+  fallbackTo = "/home",
 }: {
   title: string;
   subtitle?: string;
   back?: boolean;
   right?: ReactNode;
-  dark?: boolean;
   fallbackTo?: string;
 }) {
   const router = useRouter();
   const canGoBack = useCanGoBack();
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-30 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3",
-        dark ? "bg-ink text-white" : "bg-background text-foreground",
-      )}
-    >
+    <header className="sticky top-0 z-30 bg-background px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
       <div className="flex items-center gap-3">
         {back && (
           <button
             aria-label="Go back"
-            onClick={() => (canGoBack ? router.history.back() : router.navigate({ to: fallbackTo as "/" }))}
-            className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-xl border transition-colors",
-              dark
-                ? "border-white/25 text-white hover:bg-white/10"
-                : "border-border text-foreground hover:bg-muted",
-            )}
+            onClick={() => (canGoBack ? router.history.back() : router.navigate({ to: fallbackTo as never }))}
+            className="flex h-12 w-12 items-center justify-center border border-border text-foreground hover:bg-muted"
           >
-            <ArrowLeft size={18} strokeWidth={2} />
+            <ArrowLeft size={20} strokeWidth={2} />
           </button>
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-xl font-semibold tracking-tight">{title}</h1>
-          {subtitle && <p className={cn("truncate text-xs", dark ? "text-white/70" : "text-muted-foreground")}>{subtitle}</p>}
+          <h1 className="truncate text-[22px] font-semibold tracking-tight">{title}</h1>
+          {subtitle && <p className="truncate text-[15px] text-muted-foreground">{subtitle}</p>}
         </div>
         {right}
       </div>
@@ -82,29 +76,35 @@ export function Button({
   variant = "primary",
   full,
   className,
+  loading,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "outline" | "dark" | "danger" | "ghost" | "light";
+  variant?: "primary" | "outline" | "trust" | "danger" | "ghost" | "light";
   full?: boolean;
+  loading?: boolean;
 }) {
   const styles = {
     primary: "bg-primary text-primary-foreground hover:bg-primary-dark",
-    outline: "border border-border bg-card text-foreground hover:bg-muted",
-    light: "border border-white/40 bg-transparent text-white hover:bg-white/10",
-    dark: "bg-ink text-white hover:bg-primary-dark",
+    outline: "border border-trust bg-transparent text-trust hover:bg-trust/8",
+    trust: "bg-trust text-white hover:bg-trust/90",
+    light: "border border-white/50 bg-transparent text-white hover:bg-white/10",
     danger: "bg-danger text-white hover:opacity-90",
-    ghost: "text-primary hover:bg-primary/10",
+    ghost: "text-trust hover:bg-trust/8",
   }[variant];
   return (
     <button
       {...props}
+      disabled={props.disabled || loading}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold tracking-tight transition-colors disabled:opacity-50",
+        "inline-flex min-h-12 items-center justify-center gap-2 rounded-none px-4 py-3 text-base font-semibold tracking-tight transition-colors disabled:opacity-50",
         styles,
         full && "w-full",
         className,
       )}
     >
+      {loading && (
+        <span className="h-4 w-4 animate-spin border-2 border-current border-t-transparent" />
+      )}
       {children}
     </button>
   );
@@ -113,6 +113,7 @@ export function Button({
 export function LinkButton({
   to,
   params,
+  search,
   children,
   variant = "primary",
   full,
@@ -120,24 +121,26 @@ export function LinkButton({
 }: {
   to: string;
   params?: Record<string, string>;
+  search?: Record<string, unknown>;
   children: ReactNode;
-  variant?: "primary" | "outline" | "dark" | "danger" | "light";
+  variant?: "primary" | "outline" | "trust" | "danger" | "light";
   full?: boolean;
   className?: string;
 }) {
   const styles = {
     primary: "bg-primary text-primary-foreground hover:bg-primary-dark",
-    outline: "border border-border bg-card text-foreground hover:bg-muted",
-    light: "border border-white/40 text-white hover:bg-white/10",
-    dark: "bg-ink text-white hover:bg-primary-dark",
+    outline: "border border-trust bg-transparent text-trust hover:bg-trust/8",
+    trust: "bg-trust text-white hover:bg-trust/90",
+    light: "border border-white/50 text-white hover:bg-white/10",
     danger: "bg-danger text-white hover:opacity-90",
   }[variant];
   return (
     <Link
       to={to as "/"}
       params={params}
+      search={search}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-3 text-center text-sm font-semibold tracking-tight transition-colors",
+        "inline-flex min-h-12 items-center justify-center gap-2 rounded-none px-4 py-3 text-center text-base font-semibold tracking-tight transition-colors",
         styles,
         full && "w-full",
         className,
@@ -152,16 +155,19 @@ export function Card({
   children,
   className,
   onClick,
+  selected,
 }: {
   children: ReactNode;
   className?: string;
   onClick?: () => void;
+  selected?: boolean;
 }) {
   return (
     <div
       onClick={onClick}
       className={cn(
-        "rounded-xl border border-border bg-card p-4",
+        "rounded-none border bg-card p-4",
+        selected ? "border-2 border-primary" : "border-border",
         onClick && "cursor-pointer transition-colors hover:border-foreground/20",
         className,
       )}
@@ -171,23 +177,62 @@ export function Card({
   );
 }
 
-export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
+/** Mobile tab row: 48px targets, 15px labels. Scrolls when items don’t fit; `fit` makes equal-width segments. */
+export function ScrollTabs<T extends string>({
+  items,
+  value,
+  onChange,
+  fit,
+  className,
+}: {
+  items: readonly { id: T; label: string }[] | { id: T; label: string }[];
+  value?: T;
+  onChange?: (id: T) => void;
+  fit?: boolean;
+  className?: string;
+}) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    const active = activeRef.current;
+    if (!scroller || !active || fit) return;
+    const left = active.offsetLeft - scroller.clientWidth / 2 + active.offsetWidth / 2;
+    scroller.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }, [value, fit]);
+
   return (
-    <div className="mb-2 mt-6 flex items-end justify-between first:mt-0">
-      <h2 className="text-lg font-semibold tracking-tight text-foreground">{children}</h2>
-      {action}
+    <div
+      ref={scrollerRef}
+      className={cn(
+        fit
+          ? "flex gap-2"
+          : "no-scrollbar -mx-4 flex gap-2 overflow-x-auto scroll-px-4 px-4 snap-x snap-mandatory",
+        className,
+      )}
+    >
+      {items.map((item) => {
+        const active = item.id === value;
+        return (
+          <button
+            key={item.id}
+            ref={active ? activeRef : undefined}
+            type="button"
+            onClick={() => onChange?.(item.id)}
+            className={cn(
+              "inline-flex min-h-12 items-center justify-center px-4 text-[15px] font-medium",
+              fit ? "min-w-0 flex-1 px-2" : "shrink-0 snap-start",
+              active ? "bg-primary text-white" : "border border-border bg-card text-muted-foreground",
+            )}
+          >
+            <span className="truncate">{item.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
-
-const chipTone: Record<string, string> = {
-  primary: "bg-primary text-primary-foreground",
-  success: "bg-success text-white",
-  warning: "bg-warning text-white",
-  danger: "bg-danger text-white",
-  neutral: "bg-ink text-white",
-  muted: "border border-border bg-muted text-muted-foreground",
-};
 
 export function Chip({
   children,
@@ -195,14 +240,23 @@ export function Chip({
   className,
 }: {
   children: ReactNode;
-  tone?: keyof typeof chipTone;
+  tone?: "primary" | "success" | "warning" | "danger" | "trust" | "muted" | "sold";
   className?: string;
 }) {
+  const chipTone = {
+    primary: "bg-primary text-primary-foreground",
+    success: "bg-success text-white",
+    warning: "bg-warning text-white",
+    danger: "bg-primary text-white",
+    trust: "bg-trust text-white",
+    muted: "border border-border bg-muted text-muted-foreground",
+    sold: "bg-muted text-muted-foreground line-through",
+  }[tone];
   return (
     <span
       className={cn(
-        "inline-block rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide",
-        chipTone[tone],
+        "inline-block rounded-none px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
+        chipTone,
         className,
       )}
     >
@@ -211,38 +265,42 @@ export function Chip({
   );
 }
 
-export function statusTone(status: string): keyof typeof chipTone {
-  if (["Completed", "Paid", "Approved", "Active", "Confirmed"].includes(status)) return "success";
-  if (["Pending", "Submitted", "ExpiringSoon", "Unpaid", "Soon"].includes(status)) return "warning";
-  if (["Overdue", "Cancelled", "Rejected", "Expired", "Emergency"].includes(status)) return "danger";
-  return "primary";
-}
-
 export function Field({
   label,
   error,
   children,
   hint,
+  tone = "light",
 }: {
   label: string;
   error?: string;
   hint?: string;
+  tone?: "light" | "dark";
   children: ReactNode;
 }) {
   return (
     <label className="mb-4 block">
-      <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <span
+        className={cn(
+          "mb-2 block text-[15px] font-medium",
+          tone === "dark" ? "text-white/70" : "text-muted-foreground",
+        )}
+      >
         {label}
       </span>
       {children}
-      {hint && !error && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
-      {error && <span className="mt-1 block text-xs font-medium text-danger">{error}</span>}
+      {hint && !error && (
+        <span className={cn("mt-1 block text-xs", tone === "dark" ? "text-white/40" : "text-muted-foreground")}>
+          {hint}
+        </span>
+      )}
+      {error && <span className="mt-1 block text-xs font-medium text-primary">{error}</span>}
     </label>
   );
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-border bg-card px-3 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-foreground/40";
+  "min-h-12 w-full rounded-none border border-border bg-card px-4 text-base text-foreground outline-none placeholder:text-muted-foreground focus:border-trust";
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn(inputClass, props.className)} />;
@@ -252,8 +310,104 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
   return <textarea {...props} className={cn(inputClass, "min-h-28", props.className)} />;
 }
 
-export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={cn(inputClass, props.className)} />;
+type SelectOption = { value: string; label: string };
+
+function optionsFromChildren(children: ReactNode): SelectOption[] {
+  const next: SelectOption[] = [];
+  Children.forEach(children, (child) => {
+    if (!isValidElement<{ value?: string | number; children?: ReactNode }>(child)) return;
+    if (child.type !== "option") return;
+    const label = String(child.props.children ?? "");
+    const value = child.props.value !== undefined ? String(child.props.value) : label;
+    next.push({ value, label });
+  });
+  return next;
+}
+
+export function Select({
+  value,
+  onChange,
+  children,
+  className,
+  disabled,
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const options = useMemo(() => optionsFromChildren(children), [children]);
+  const current = String(value ?? "");
+  const selected = options.find((o) => o.value === current);
+  const placeholder = options.find((o) => o.value === "")?.label || "Select";
+  const filled = Boolean(selected && selected.value !== "");
+  const filtered = options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()));
+
+  function pick(next: string) {
+    onChange?.({ target: { value: next } } as React.ChangeEvent<HTMLSelectElement>);
+    setOpen(false);
+    setQuery("");
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => {
+          setQuery("");
+          setOpen(true);
+        }}
+        className={cn(
+          inputClass,
+          "flex items-center justify-between gap-3 text-left",
+          !filled && "text-muted-foreground",
+          className,
+        )}
+      >
+        <span className="truncate">{filled ? selected?.label : placeholder}</span>
+        <ChevronDown size={18} strokeWidth={2} className="shrink-0 text-muted-foreground" />
+      </button>
+      <BottomSheet
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          setQuery("");
+        }}
+        title={placeholder}
+      >
+        {options.length > 10 && (
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search"
+            className={cn(inputClass, "mb-3")}
+            autoFocus
+          />
+        )}
+        <div className="no-scrollbar max-h-[55dvh] overflow-y-auto">
+          {filtered.map((o) => {
+            const active = o.value === current;
+            return (
+              <button
+                key={`${o.value}-${o.label}`}
+                type="button"
+                onClick={() => pick(o.value)}
+                className={cn(
+                  "flex min-h-12 w-full items-center justify-between gap-3 border-b border-border px-1 text-left text-base",
+                  active ? "font-semibold text-primary" : "text-foreground",
+                  o.value === "" && "text-muted-foreground",
+                )}
+              >
+                <span className="truncate">{o.label}</span>
+                {active && <Check size={18} strokeWidth={2.4} className="shrink-0 text-primary" />}
+              </button>
+            );
+          })}
+          {filtered.length === 0 && (
+            <p className="py-8 text-center text-[15px] text-muted-foreground">No matches</p>
+          )}
+        </div>
+      </BottomSheet>
+    </>
+  );
 }
 
 export function Row({
@@ -273,7 +427,7 @@ export function Row({
 }) {
   const inner = (
     <>
-      {icon && <span className="text-primary">{icon}</span>}
+      {icon && <span className="text-trust">{icon}</span>}
       <span className="flex-1 text-sm font-medium text-foreground">{label}</span>
       {value && <span className="text-xs text-muted-foreground">{value}</span>}
       <ChevronRight size={16} className="text-muted-foreground" />
@@ -292,33 +446,6 @@ export function Row({
   );
 }
 
-export function Stepper({ steps, current }: { steps: string[]; current: number }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      {steps.map((s, i) => (
-        <div key={s} className="flex gap-3">
-          <div className="flex flex-col items-center">
-            <div
-              className={cn(
-                "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
-                i <= current ? "bg-primary text-primary-foreground" : "border border-border bg-muted text-muted-foreground",
-              )}
-            >
-              {i + 1}
-            </div>
-            {i < steps.length - 1 && (
-              <div className={cn("w-px flex-1", i < current ? "bg-primary" : "bg-border")} />
-            )}
-          </div>
-          <div className={cn("pb-5 text-sm", i <= current ? "font-semibold text-foreground" : "text-muted-foreground")}>
-            {s}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function BottomSheet({
   open,
   onClose,
@@ -330,28 +457,44 @@ export function BottomSheet({
   title: string;
   children: ReactNode;
 }) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60" onClick={onClose}>
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/55" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[480px] rounded-t-2xl border-t border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className="w-full max-w-[480px] rounded-none border-t border-border bg-card px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-xl font-semibold tracking-tight text-foreground">{title}</h3>
-          <button aria-label="Close" onClick={onClose} className="p-1 text-muted-foreground">
-            <X size={18} />
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3 className="text-[22px] font-semibold tracking-tight text-foreground">{title}</h3>
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={onClose}
+            className="flex h-12 w-12 items-center justify-center text-muted-foreground"
+          >
+            <X size={20} />
           </button>
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
 export function Empty({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
+    <div className="border border-dashed border-border bg-card p-8 text-center">
       <h3 className="text-xl font-semibold tracking-tight text-foreground">{title}</h3>
       <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">{body}</p>
       {action && <div className="mt-4">{action}</div>}
@@ -359,19 +502,18 @@ export function Empty({ title, body, action }: { title: string; body: string; ac
   );
 }
 
-export function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
+export function WarningBanner({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-semibold text-foreground">
-      <span className="inline-flex">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <span
-            key={i}
-            style={{ width: size, height: size }}
-            className={cn("mr-0.5 inline-block rounded-sm", i < Math.round(rating) ? "bg-primary" : "bg-border")}
-          />
-        ))}
-      </span>
-      {rating.toFixed(1)}
-    </span>
+    <div className="border-l-4 border-primary bg-primary/8 px-3 py-2.5 text-xs leading-relaxed text-foreground">
+      {children}
+    </div>
+  );
+}
+
+export function AmberBanner({ children }: { children: ReactNode }) {
+  return (
+    <div className="border-l-4 border-amber bg-amber/10 px-3 py-2.5 text-xs leading-relaxed text-foreground">
+      {children}
+    </div>
   );
 }
