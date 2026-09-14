@@ -22,6 +22,7 @@ export function TabBar() {
     HIDDEN.has(pathname) ||
     pathname.startsWith("/checkout") ||
     pathname.startsWith("/listing/") ||
+    pathname.startsWith("/inbox/") ||
     pathname.endsWith("/edit")
   ) {
     return null;

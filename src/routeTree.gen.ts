@@ -27,6 +27,8 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as InboxIndexRouteImport } from './routes/inbox/index'
+import { Route as InboxIdRouteImport } from './routes/inbox/$id'
 import { Route as InventoryIndexRouteImport } from './routes/inventory/index'
 import { Route as ListingIdRouteImport } from './routes/listing/$id'
 import { Route as PaymentCancelRouteImport } from './routes/payment.cancel'
@@ -124,6 +126,16 @@ const VerifyRoute = VerifyRouteImport.update({
   path: '/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InboxIndexRoute = InboxIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => InboxRoute,
+} as any)
+const InboxIdRoute = InboxIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => InboxRoute,
+} as any)
 const InventoryIndexRoute = InventoryIndexRouteImport.update({
   id: '/inventory/',
   path: '/inventory/',
@@ -162,7 +174,7 @@ export interface FileRoutesByFullPath {
   '/favorites': typeof FavoritesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
-  '/inbox': typeof InboxRoute
+  '/inbox': typeof InboxRouteWithChildren
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
@@ -174,9 +186,11 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
+  '/inbox/$id': typeof InboxIdRoute
   '/listing/$id': typeof ListingIdRoute
   '/payment/cancel': typeof PaymentCancelRoute
   '/payment/success': typeof PaymentSuccessRoute
+  '/inbox/': typeof InboxIndexRoute
   '/inventory/': typeof InventoryIndexRoute
   '/inventory/$id/edit': typeof InventoryIdEditRoute
   '/inventory/$id/': typeof InventoryIdIndexRoute
@@ -188,7 +202,6 @@ export interface FileRoutesByTo {
   '/favorites': typeof FavoritesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
-  '/inbox': typeof InboxRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
@@ -200,9 +213,11 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
+  '/inbox/$id': typeof InboxIdRoute
   '/listing/$id': typeof ListingIdRoute
   '/payment/cancel': typeof PaymentCancelRoute
   '/payment/success': typeof PaymentSuccessRoute
+  '/inbox': typeof InboxIndexRoute
   '/inventory': typeof InventoryIndexRoute
   '/inventory/$id/edit': typeof InventoryIdEditRoute
   '/inventory/$id': typeof InventoryIdIndexRoute
@@ -215,7 +230,7 @@ export interface FileRoutesById {
   '/favorites': typeof FavoritesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
-  '/inbox': typeof InboxRoute
+  '/inbox': typeof InboxRouteWithChildren
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
@@ -227,9 +242,11 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
+  '/inbox/$id': typeof InboxIdRoute
   '/listing/$id': typeof ListingIdRoute
   '/payment/cancel': typeof PaymentCancelRoute
   '/payment/success': typeof PaymentSuccessRoute
+  '/inbox/': typeof InboxIndexRoute
   '/inventory/': typeof InventoryIndexRoute
   '/inventory/$id/edit': typeof InventoryIdEditRoute
   '/inventory/$id/': typeof InventoryIdIndexRoute
@@ -255,9 +272,11 @@ export interface FileRouteTypes {
     | '/search'
     | '/terms'
     | '/verify'
+    | '/inbox/$id'
     | '/listing/$id'
     | '/payment/cancel'
     | '/payment/success'
+    | '/inbox/'
     | '/inventory/'
     | '/inventory/$id/edit'
     | '/inventory/$id/'
@@ -269,7 +288,6 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/forgot-password'
     | '/home'
-    | '/inbox'
     | '/login'
     | '/notifications'
     | '/onboarding'
@@ -281,9 +299,11 @@ export interface FileRouteTypes {
     | '/search'
     | '/terms'
     | '/verify'
+    | '/inbox/$id'
     | '/listing/$id'
     | '/payment/cancel'
     | '/payment/success'
+    | '/inbox'
     | '/inventory'
     | '/inventory/$id/edit'
     | '/inventory/$id'
@@ -307,9 +327,11 @@ export interface FileRouteTypes {
     | '/search'
     | '/terms'
     | '/verify'
+    | '/inbox/$id'
     | '/listing/$id'
     | '/payment/cancel'
     | '/payment/success'
+    | '/inbox/'
     | '/inventory/'
     | '/inventory/$id/edit'
     | '/inventory/$id/'
@@ -322,7 +344,7 @@ export interface RootRouteChildren {
   FavoritesRoute: typeof FavoritesRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeRoute: typeof HomeRoute
-  InboxRoute: typeof InboxRoute
+  InboxRoute: typeof InboxRouteWithChildren
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -470,6 +492,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inbox/': {
+      id: '/inbox/'
+      path: '/'
+      fullPath: '/inbox/'
+      preLoaderRoute: typeof InboxIndexRouteImport
+      parentRoute: typeof InboxRoute
+    }
+    '/inbox/$id': {
+      id: '/inbox/$id'
+      path: '/$id'
+      fullPath: '/inbox/$id'
+      preLoaderRoute: typeof InboxIdRouteImport
+      parentRoute: typeof InboxRoute
+    }
     '/inventory/': {
       id: '/inventory/'
       path: '/inventory'
@@ -515,6 +551,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface InboxRouteChildren {
+  InboxIdRoute: typeof InboxIdRoute
+  InboxIndexRoute: typeof InboxIndexRoute
+}
+
+const InboxRouteChildren: InboxRouteChildren = {
+  InboxIdRoute: InboxIdRoute,
+  InboxIndexRoute: InboxIndexRoute,
+}
+
+const InboxRouteWithChildren = InboxRoute._addFileChildren(InboxRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddCarRoute: AddCarRoute,
@@ -522,7 +570,7 @@ const rootRouteChildren: RootRouteChildren = {
   FavoritesRoute: FavoritesRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HomeRoute: HomeRoute,
-  InboxRoute: InboxRoute,
+  InboxRoute: InboxRouteWithChildren,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,

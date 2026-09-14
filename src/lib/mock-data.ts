@@ -425,6 +425,22 @@ export const seedConversations: Conversation[] = [
     lastMessage: "Is the price firm if I come this Saturday?",
     lastAt: "12m",
     unread: 2,
+    messages: [
+      {
+        id: "c1m1",
+        from: "them",
+        kind: "text",
+        text: "Still available? I can come Saturday.",
+        at: "10:12 AM",
+      },
+      {
+        id: "c1m2",
+        from: "them",
+        kind: "text",
+        text: "Is the price firm if I come this Saturday?",
+        at: "10:18 AM",
+      },
+    ],
   },
   {
     id: "c2",
@@ -435,6 +451,15 @@ export const seedConversations: Conversation[] = [
     lastMessage: "Can you send a video of the backup camera?",
     lastAt: "2h",
     unread: 0,
+    messages: [
+      {
+        id: "c2m1",
+        from: "them",
+        kind: "text",
+        text: "Can you send a video of the backup camera?",
+        at: "Yesterday",
+      },
+    ],
   },
 ];
 

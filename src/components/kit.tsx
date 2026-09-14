@@ -261,7 +261,7 @@ export function Chip({
   return (
     <span
       className={cn(
-        "inline-block rounded-none px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
+        "inline-block rounded-none px-2.5 py-1 text-[11px] font-semibold",
         chipTone,
         className,
       )}

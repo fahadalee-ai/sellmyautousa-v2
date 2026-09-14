@@ -40,7 +40,7 @@ function HomeScreen() {
   const firstName = user?.fullName.split(" ")[0] ?? "there";
 
   return (
-    <div className="min-h-dvh bg-white pb-10">
+    <div className="min-h-dvh bg-background pb-10">
       <section className="relative min-h-[17.5rem] overflow-hidden bg-[#0B0B0F]">
         <SafeImg
           src={IMAGES.homeHero}

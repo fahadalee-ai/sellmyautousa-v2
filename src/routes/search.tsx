@@ -40,7 +40,7 @@ function SearchScreen() {
   }, [marketplace, query, make, bodyType]);
 
   return (
-    <div className="min-h-dvh bg-white pb-8">
+    <div className="min-h-dvh bg-background pb-8">
       <Header title="Search" back={false} />
       <div className="space-y-3 px-4">
         <Input

@@ -9,7 +9,8 @@ import {
 } from "./mock-data";
 import { clearStorage, readJson, readStorage, writeJson, writeStorage } from "./storage";
 import { usaSampleDraft } from "./sample-draft";
-import { emptyDraft, type Listing, type ListingDraft, type ThemeMode, type User } from "./types";
+import { sellerFor } from "./mock-data";
+import { emptyDraft, type ChatMessage, type Conversation, type Listing, type ListingDraft, type ThemeMode, type User } from "./types";
 
 export type Toast = { id: number; title: string; body?: string };
 
@@ -52,7 +53,10 @@ type Store = {
   setSelectedAddonId: (id: string) => void;
   plans: typeof seedPlans;
   addons: typeof seedAddons;
-  conversations: typeof seedConversations;
+  conversations: Conversation[];
+  sendOffer: (listingId: string, amount: string) => Conversation;
+  startConversation: (listingId: string, text?: string) => Conversation;
+  sendMessage: (conversationId: string, text: string) => void;
   notifications: typeof seedNotifications;
   markAllRead: () => void;
   favoriteIds: string[];
@@ -86,6 +90,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedAddonId, setSelectedAddonId] = useState("");
   const [pendingCheckoutId, setPendingCheckoutId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(seedNotifications);
+  const [conversations, setConversations] = useState<Conversation[]>(seedConversations);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [failedLogins, setFailedLogins] = useState(0);
@@ -105,6 +110,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     setPendingCheckoutId(readStorage("checkout"));
     setFavoriteIds(readJson<string[]>("favorites", []));
+    const savedThreads = readJson<Conversation[] | null>("conversations-v1", null);
+    if (savedThreads && savedThreads.length) {
+      setConversations(savedThreads.map((c) => ({ ...c, messages: c.messages ?? [] })));
+    }
     setHydrated(true);
   }, []);
 
@@ -125,6 +134,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const persistUsers = (next: User[]) => {
       setUsers(next);
       writeJson("users", next);
+    };
+
+    const upsertThread = (listing: Listing, buyerId: string, peerName: string, msg: ChatMessage): Conversation => {
+      const existing = conversations.find((c) => c.listingId === listing.id && c.buyerId === buyerId);
+      const title = [listing.year, listing.make, listing.model].filter(Boolean).join(" ");
+      if (existing) {
+        const nextThread: Conversation = {
+          ...existing,
+          messages: [...existing.messages, msg],
+          lastMessage: msg.kind === "offer" ? `Offer ${msg.text.includes("$") ? msg.text.match(/\$[\d,]+/)?.[0] : ""}`.trim() : msg.text,
+          lastAt: "Just now",
+          unread: 0,
+        };
+        const next = [nextThread, ...conversations.filter((c) => c.id !== existing.id)];
+        setConversations(next);
+        writeJson("conversations-v1", next);
+        return nextThread;
+      }
+      const created: Conversation = {
+        id: `c-${listing.id}-${buyerId}`,
+        listingId: listing.id,
+        listingTitle: title,
+        listingThumb: listing.thumbnail,
+        peerName,
+        buyerId,
+        lastMessage: msg.kind === "offer" ? `Offer ${msg.amount ? `$${Number(msg.amount).toLocaleString()}` : ""}` : msg.text,
+        lastAt: "Just now",
+        unread: 0,
+        messages: [msg],
+      };
+      const next = [created, ...conversations];
+      setConversations(next);
+      writeJson("conversations-v1", next);
+      return created;
     };
 
     return {
@@ -278,7 +321,55 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSelectedAddonId,
       plans: seedPlans,
       addons: seedAddons,
-      conversations: seedConversations,
+      conversations,
+      sendOffer: (listingId, amount) => {
+        const listing = listings.find((l) => l.id === listingId);
+        if (!listing || !user) throw new Error("Cannot send offer");
+        const dollars = Number(amount.replace(/\D/g, ""));
+        const label = Number.isFinite(dollars) ? `$${dollars.toLocaleString()}` : `$${amount}`;
+        const title = [listing.year, listing.make, listing.model].filter(Boolean).join(" ");
+        const msg: ChatMessage = {
+          id: `m${Date.now()}`,
+          from: "me",
+          kind: "offer",
+          amount: String(dollars || amount),
+          text: `I'd like to offer ${label} for the ${title}.`,
+          at: new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date()),
+        };
+        return upsertThread(listing, user.id, sellerFor(listing.ownerId)?.fullName ?? "Seller", msg);
+      },
+      startConversation: (listingId, text) => {
+        const listing = listings.find((l) => l.id === listingId);
+        if (!listing || !user) throw new Error("Cannot start chat");
+        const msg: ChatMessage = {
+          id: `m${Date.now()}`,
+          from: "me",
+          kind: "text",
+          text: text?.trim() || "Hi, is this still available?",
+          at: new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date()),
+        };
+        return upsertThread(listing, user.id, sellerFor(listing.ownerId)?.fullName ?? "Seller", msg);
+      },
+      sendMessage: (conversationId, text) => {
+        const body = text.trim();
+        if (!body) return;
+        const msg: ChatMessage = {
+          id: `m${Date.now()}`,
+          from: "me",
+          kind: "text",
+          text: body,
+          at: new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date()),
+        };
+        setConversations((list) => {
+          const next = list.map((c) =>
+            c.id === conversationId
+              ? { ...c, messages: [...c.messages, msg], lastMessage: msg.text, lastAt: "Just now", unread: 0 }
+              : c,
+          );
+          writeJson("conversations-v1", next);
+          return next;
+        });
+      },
       notifications,
       markAllRead: () => setNotifications((list) => list.map((n) => ({ ...n, read: true }))),
       favoriteIds,
@@ -305,6 +396,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedPlanId,
     selectedAddonId,
     pendingCheckoutId,
+    conversations,
     notifications,
     favoriteIds,
     toasts,

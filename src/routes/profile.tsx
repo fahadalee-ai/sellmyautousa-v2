@@ -18,7 +18,7 @@ function ProfileScreen() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-dvh bg-white pb-8">
+    <div className="min-h-dvh bg-background pb-8">
       <Header title="Profile" back={false} />
       <div className="px-4 pb-4">
         <div className="flex items-center gap-3 border border-border bg-card p-4">

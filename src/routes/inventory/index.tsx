@@ -31,7 +31,7 @@ function InventoryScreen() {
   const shown = myListings.filter((l) => filter === "all" || l.status === filter);
 
   return (
-    <div className="min-h-dvh bg-white pb-8">
+    <div className="min-h-dvh bg-background pb-8">
       <header className="sticky top-0 z-30 flex items-center justify-between bg-background px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
         <div className="flex items-center gap-2">
           <BrandIcon tone="color" size="md" />

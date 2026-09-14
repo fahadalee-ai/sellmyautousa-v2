@@ -5,18 +5,19 @@ import { useApp } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({ variant = "light" }: { variant?: "light" | "overlay" }) {
-  const { notifications } = useApp();
+  const { notifications, theme } = useApp();
   const unread = notifications.filter((n) => !n.read).length;
   const overlay = variant === "overlay";
+  const lightLogo = !overlay && theme !== "dark";
 
   return (
     <header
       className={cn(
         "z-30 flex items-center justify-between px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1",
-        overlay ? "absolute inset-x-0 top-0 bg-transparent" : "sticky top-0 bg-white",
+        overlay ? "absolute inset-x-0 top-0 bg-transparent" : "sticky top-0 bg-background",
       )}
     >
-      <Logo tone={overlay ? "white" : "color"} size="sm" className="max-w-[11rem]" />
+      <Logo tone={lightLogo ? "color" : "white"} size="sm" className="max-w-[11rem]" />
       <div className="flex items-center">
         <Link
           to="/search"

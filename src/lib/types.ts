@@ -102,15 +102,26 @@ export type Listing = ListingDraft & {
   chats: number;
 };
 
+export type ChatMessage = {
+  id: string;
+  from: "me" | "them";
+  text: string;
+  kind: "text" | "offer";
+  amount?: string;
+  at: string;
+};
+
 export type Conversation = {
   id: string;
   listingId: string;
   listingTitle: string;
   listingThumb: string;
   peerName: string;
+  buyerId?: string;
   lastMessage: string;
   lastAt: string;
   unread: number;
+  messages: ChatMessage[];
 };
 
 export type AppNotification = {

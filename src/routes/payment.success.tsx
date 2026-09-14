@@ -10,7 +10,7 @@ export const Route = createFileRoute("/payment/success")({
 
 function PaymentSuccess() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-white px-6 pb-24 text-center">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-6 pb-24 text-center">
       <Logo tone="color" size="lg" className="mb-6 max-w-[16rem]" />
       <div className="flex h-24 w-24 items-center justify-center bg-success">
         <Check size={48} strokeWidth={2.4} className="text-white" />
