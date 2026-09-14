@@ -1,18 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Eye, Pencil, Trash2, BadgeCheck } from "lucide-react";
-import { Chip } from "@/components/kit";
+import { CalendarDays, CircleCheck, Star } from "lucide-react";
 import { SafeImg } from "@/components/SafeImg";
-import { RelevanceScore } from "@/components/RelevanceScore";
 import { computeScore } from "@/lib/score";
-import type { Listing } from "@/lib/types";
+import type { Listing, Plan } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-function statusTone(status: Listing["status"]) {
-  if (status === "paid") return "success" as const;
-  if (status === "unpaid") return "danger" as const;
-  if (status === "sold") return "sold" as const;
-  return "muted" as const;
-}
 
 export function money(value: string | number) {
   const n = typeof value === "number" ? value : Number(value);
@@ -24,69 +15,107 @@ export function listingTitle(l: Pick<Listing, "year" | "make" | "model">) {
   return [l.year, l.make, l.model].filter(Boolean).join(" ");
 }
 
-export function InventoryCard({
+export function listingExpireAt(listing: Listing, plans: Plan[]): Date | null {
+  if (listing.status === "draft" || listing.status === "unpaid") return null;
+  const plan = plans.find((p) => p.id === listing.subscriptionId);
+  if (!plan) return null;
+  return new Date(new Date(listing.createdAt).getTime() + plan.durationDays * 86_400_000);
+}
+
+export function isListingExpired(listing: Listing, plans: Plan[]): boolean {
+  if (listing.status === "sold") return true;
+  const expires = listingExpireAt(listing, plans);
+  return Boolean(expires && expires.getTime() < Date.now());
+}
+
+function timeAgo(iso: string) {
+  const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
+  if (days <= 0) return "today";
+  return `${days}d ago`;
+}
+
+function formatExpire(date: Date | null) {
+  if (!date) return "N/A";
+  return date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
+}
+
+export function AdCard({
   listing,
-  onSold,
-  onDelete,
+  plan,
+  pending,
+  onPay,
 }: {
   listing: Listing;
-  onSold: () => void;
-  onDelete: () => void;
+  plan?: Plan;
+  pending?: boolean;
+  onPay?: () => void;
 }) {
-  const score = computeScore(listing, listing);
+  const score = pending ? null : computeScore(listing, listing);
+  const expires = listingExpireAt(listing, plan ? [plan] : []);
+  const subscription = pending || !plan ? "N/A" : plan.shortName;
+
   return (
-    <article className="border border-border bg-card">
-      <Link to="/inventory/$id" params={{ id: listing.id }} className="flex gap-3 p-3">
+    <article className="border border-border bg-card p-3">
+      <Link to="/inventory/$id" params={{ id: listing.id }} className="flex gap-3">
         <SafeImg
           src={listing.thumbnail}
           alt={listingTitle(listing)}
-          className="h-24 w-28 shrink-0 object-cover"
+          className="h-[5.5rem] w-[5.5rem] shrink-0 object-cover"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Chip tone={statusTone(listing.status)}>{listing.status}</Chip>
-            {listing.featured && <Chip tone="trust">Featured</Chip>}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              {score ? (
+                <div className="flex items-center gap-2">
+                  <span className="h-1.5 w-16 overflow-hidden bg-muted">
+                    <span className="block h-full bg-primary" style={{ width: `${Math.min(100, score.total)}%` }} />
+                  </span>
+                  <span className="text-[12px] font-semibold text-foreground">{score.total}/100</span>
+                </div>
+              ) : (
+                <p className="text-[12px] font-semibold text-foreground">Score: N/A</p>
+              )}
+              <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                <CalendarDays size={12} strokeWidth={1.75} className="shrink-0" />
+                Expire on: {formatExpire(expires)}
+              </p>
+              <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                <Star size={12} strokeWidth={1.75} className="shrink-0" />
+                Subscription: {subscription}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <span className="text-[11px] text-muted-foreground">{timeAgo(listing.updatedAt || listing.createdAt)}</span>
+              {pending && (
+                <span className="bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">Draft</span>
+              )}
+            </div>
           </div>
-          <h3 className={cn("mt-1 truncate text-sm font-semibold", listing.status === "sold" && "line-through")}>
+          <h3 className={cn("mt-2 truncate text-[15px] font-semibold text-foreground", listing.status === "sold" && "line-through")}>
             {listingTitle(listing)}
           </h3>
-          <p className="text-sm font-semibold text-trust">{money(listing.price)}</p>
+          <p className="text-[13px] text-muted-foreground">Used</p>
         </div>
       </Link>
-      <div className="px-3 pb-3">
-        <RelevanceScore score={score} compact />
-        <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
-          <Link
-            to="/listing/$id"
-            params={{ id: listing.id }}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-trust"
-          >
-            <Eye size={14} /> View
-          </Link>
-          <Link
-            to="/inventory/$id/edit"
-            params={{ id: listing.id }}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-foreground"
-          >
-            <Pencil size={14} /> Edit
-          </Link>
-          <button
-            type="button"
-            onClick={onSold}
-            disabled={listing.status === "sold"}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-foreground disabled:opacity-40"
-          >
-            <BadgeCheck size={14} /> Sold
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-primary"
-          >
-            <Trash2 size={14} /> Delete
-          </button>
+
+      {pending ? (
+        <button
+          type="button"
+          onClick={onPay}
+          className="mt-3 inline-flex h-11 w-full items-center justify-center bg-primary text-[17px] font-semibold text-white"
+        >
+          Pay Now
+        </button>
+      ) : listing.status === "sold" || isListingExpired(listing, plan ? [plan] : []) ? (
+        <div className="mt-3 inline-flex h-11 w-full items-center justify-center border border-border text-[17px] font-semibold text-muted-foreground">
+          {listing.status === "sold" ? "Sold" : "Expired"}
         </div>
-      </div>
+      ) : (
+        <div className="mt-3 inline-flex h-11 w-full items-center justify-center gap-1.5 border border-border text-[17px] font-semibold text-foreground">
+          <CircleCheck size={16} strokeWidth={2.2} className="text-success" />
+          {plan?.kind === "bundle" ? "Package Subscription" : "Paid"}
+        </div>
+      )}
     </article>
   );
 }
