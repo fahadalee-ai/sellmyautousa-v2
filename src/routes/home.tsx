@@ -21,7 +21,7 @@ const CATEGORIES = [
   { id: "browse", label: "Browse", to: "/search" as const },
   { id: "sell", label: "Sell car", to: "/plans" as const },
   { id: "featured", label: "Featured", to: "/search" as const },
-  { id: "inventory", label: "My cars", to: "/inventory" as const },
+  { id: "inventory", label: "My Ads", to: "/inventory" as const },
   { id: "offers", label: "Offers", to: "/inbox" as const },
 ];
 

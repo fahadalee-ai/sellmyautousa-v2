@@ -37,7 +37,7 @@ function ProfileScreen() {
         </p>
       </div>
       <div className="border-y border-border">
-        <Row icon={<Car size={18} />} label="Inventory" to="/inventory" />
+        <Row icon={<Car size={18} />} label="My Ads" to="/inventory" />
         <Row icon={<MessageSquare size={18} />} label="Inbox" to="/inbox" />
         <Row icon={<Heart size={18} />} label="Saved listings" to="/favorites" />
         <Row icon={<Bell size={18} />} label="Notifications" to="/notifications" />
