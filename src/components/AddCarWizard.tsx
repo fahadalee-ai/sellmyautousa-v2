@@ -1,16 +1,17 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Check, Plus, Upload } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { QualityMeter, RelevanceScore } from "@/components/RelevanceScore";
-import { AmberBanner, Button, Chip, Field, Input, ScrollTabs, Select, WarningBanner } from "@/components/kit";
+import { AmberBanner, Button, Chip, Field, Input, Select, WarningBanner } from "@/components/kit";
 import { listingTitle, money } from "@/components/ListingCard";
 import {
-  BODY_TYPES,
   COLORS,
   DRIVETRAINS,
   FEATURES,
   FUEL_TYPES,
   MAKES,
+  bodyTypeFor,
+  bodyTypesFor,
   makeForModel,
   modelsFor,
   STATES,
@@ -22,7 +23,7 @@ import {
 import { IMAGES } from "@/lib/images";
 import { computeScore, qualityHint } from "@/lib/score";
 import { useApp } from "@/lib/store";
-import type { CommMode, Listing, PriceStance } from "@/lib/types";
+import type { CommMode, Listing, ListingDraft, PriceStance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const ADD_STEPS = [
@@ -44,6 +45,66 @@ type Props = {
   listingId?: string;
   onStep: (next: number) => void;
 };
+
+function WizardStepBar({
+  step,
+  draft,
+  onStep,
+}: {
+  step: number;
+  draft: ListingDraft;
+  onStep: (next: number) => void;
+}) {
+  return (
+    <div className="mt-3 pb-3">
+      <div className="flex items-center gap-1">
+        {ADD_STEPS.map((label, i) => {
+          const n = i + 1;
+          const active = n === step;
+          const done = !active && isWizardStepDone(n, draft, step);
+          return (
+            <button
+              key={label}
+              type="button"
+              aria-current={active ? "step" : undefined}
+              aria-label={`${label}, step ${n} of 10`}
+              onClick={() => onStep(n)}
+              className={cn(
+                "flex h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5",
+                active && "bg-primary text-white",
+                done && "border border-trust bg-trust/8 text-trust",
+                !active && !done && "border border-border bg-card text-muted-foreground",
+              )}
+            >
+              {done ? (
+                <Check size={14} strokeWidth={2.6} />
+              ) : (
+                <span className="text-[13px] font-semibold tabular-nums leading-none">{n}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-center text-[13px] font-semibold text-foreground">{ADD_STEPS[step - 1]}</p>
+    </div>
+  );
+}
+
+function isWizardStepDone(n: number, draft: ListingDraft, current: number): boolean {
+  if (n === 10) return false;
+  if (n === 1) return Boolean(draft.year && draft.make && draft.model && draft.bodyType);
+  if (n === 2) return current > 2 || draft.vinDecoded || /^[A-HJ-NPR-Z0-9]{17}$/.test(draft.vin.trim().toUpperCase());
+  if (n === 3) {
+    return Boolean(draft.mileage && draft.transmission && draft.fuelType && draft.drivetrain && draft.exteriorColor);
+  }
+  if (n === 4) return Boolean(draft.state && draft.city && /^\d{5}$/.test(draft.zip.trim()));
+  if (n === 5) return draft.features.length > 0;
+  if (n === 6) return Boolean(draft.price && Number(draft.price) > 0);
+  if (n === 7) return Boolean(draft.thumbnail);
+  if (n === 8) return current > 8 || Boolean(draft.historyReport);
+  if (n === 9) return Boolean(draft.commMode);
+  return false;
+}
 
 export function AddCarWizard({ step, mode, listingId, onStep }: Props) {
   const {
@@ -151,12 +212,7 @@ export function AddCarWizard({ step, mode, listingId, onStep }: Props) {
         <div className="h-1 w-full bg-muted">
           <div className="h-full bg-primary" style={{ width: `${(step / 10) * 100}%` }} />
         </div>
-        <ScrollTabs
-          className="mt-3 pb-3"
-          items={ADD_STEPS.map((label, i) => ({ id: String(i + 1), label }))}
-          value={String(step)}
-          onChange={(id) => onStep(Number(id))}
-        />
+        <WizardStepBar step={step} draft={draft} onStep={onStep} />
       </div>
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-4 py-4">
@@ -223,6 +279,20 @@ export function AddCarWizard({ step, mode, listingId, onStep }: Props) {
 function BasicsStep({ errors }: { errors: Record<string, string> }) {
   const { draft, setDraft } = useApp();
   const models = modelsFor(draft.make);
+  const bodyTypes = useMemo(() => bodyTypesFor(draft.make, draft.model), [draft.make, draft.model]);
+  const matchedBody = draft.model ? bodyTypeFor(draft.make, draft.model) : undefined;
+  const lockedBody = Boolean(matchedBody);
+
+  useEffect(() => {
+    if (matchedBody) {
+      if (matchedBody !== draft.bodyType) setDraft({ bodyType: matchedBody });
+      return;
+    }
+    if (draft.bodyType && !bodyTypes.includes(draft.bodyType as (typeof bodyTypes)[number])) {
+      setDraft({ bodyType: "" });
+    }
+  }, [matchedBody, bodyTypes, draft.bodyType, setDraft]);
+
   return (
     <>
       <h2 className="mb-4 text-[17px] font-semibold">Vehicle Basics</h2>
@@ -236,7 +306,7 @@ function BasicsStep({ errors }: { errors: Record<string, string> }) {
       <Field label="Make" error={errors.make}>
         <Select
           value={draft.make}
-          onChange={(e) => setDraft({ make: e.target.value, model: "" })}
+          onChange={(e) => setDraft({ make: e.target.value, model: "", bodyType: "" })}
           options={[{ value: "", label: "Select make" }, ...MAKES.map((m) => ({ value: m, label: m }))]}
         />
       </Field>
@@ -245,8 +315,12 @@ function BasicsStep({ errors }: { errors: Record<string, string> }) {
           value={draft.model}
           onChange={(e) => {
             const model = e.target.value;
-            const inferred = makeForModel(model);
-            setDraft({ model, make: draft.make || inferred || "" });
+            const make = draft.make || makeForModel(model) || "";
+            setDraft({
+              model,
+              make,
+              bodyType: bodyTypeFor(make, model) || "",
+            });
           }}
           options={[{ value: "", label: "Select model" }, ...models.map((m) => ({ value: m, label: m }))]}
         />
@@ -254,11 +328,20 @@ function BasicsStep({ errors }: { errors: Record<string, string> }) {
       <Field label="Trim">
         <Input value={draft.trim} placeholder="e.g. SS, XLE, Limited" onChange={(e) => setDraft({ trim: e.target.value })} />
       </Field>
-      <Field label="Body Type" error={errors.bodyType}>
+      <Field
+        label="Body Type"
+        error={errors.bodyType}
+        hint={lockedBody ? "Set from make and model" : draft.make ? "Models for this make" : undefined}
+      >
         <Select
           value={draft.bodyType}
+          disabled={lockedBody}
           onChange={(e) => setDraft({ bodyType: e.target.value })}
-          options={[{ value: "", label: "Select body type" }, ...BODY_TYPES.map((b) => ({ value: b, label: b }))]}
+          options={
+            lockedBody && draft.bodyType
+              ? [{ value: draft.bodyType, label: draft.bodyType }]
+              : [{ value: "", label: "Select body type" }, ...bodyTypes.map((b) => ({ value: b, label: b }))]
+          }
         />
       </Field>
     </>

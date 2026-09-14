@@ -177,7 +177,7 @@ export function Card({
   );
 }
 
-/** Mobile tab row: 48px targets, 15px labels. Scrolls when items don’t fit; `fit` makes equal-width segments. */
+/** Mobile tab row: 44pt targets. `done` marks completed steps; active stays red. */
 export function ScrollTabs<T extends string>({
   items,
   value,
@@ -185,7 +185,7 @@ export function ScrollTabs<T extends string>({
   fit,
   className,
 }: {
-  items: readonly { id: T; label: string }[] | { id: T; label: string }[];
+  items: readonly { id: T; label: string; done?: boolean }[] | { id: T; label: string; done?: boolean }[];
   value?: T;
   onChange?: (id: T) => void;
   fit?: boolean;
@@ -195,11 +195,12 @@ export function ScrollTabs<T extends string>({
   const activeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const scroller = scrollerRef.current;
     const active = activeRef.current;
-    if (!scroller || !active || fit) return;
-    const left = active.offsetLeft - scroller.clientWidth / 2 + active.offsetWidth / 2;
-    scroller.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+    if (!active || fit) return;
+    const frame = requestAnimationFrame(() => {
+      active.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    });
+    return () => cancelAnimationFrame(frame);
   }, [value, fit]);
 
   return (
@@ -214,18 +215,23 @@ export function ScrollTabs<T extends string>({
     >
       {items.map((item) => {
         const active = item.id === value;
+        const done = Boolean(item.done) && !active;
         return (
           <button
             key={item.id}
             ref={active ? activeRef : undefined}
             type="button"
+            aria-current={active ? "step" : undefined}
             onClick={() => onChange?.(item.id)}
             className={cn(
-              "inline-flex h-11 min-h-11 items-center justify-center px-3.5 text-[15px] font-medium",
+              "inline-flex h-11 min-h-11 items-center justify-center gap-1 px-3.5 text-[15px] font-medium",
               fit ? "min-w-0 flex-1 px-2" : "shrink-0 snap-start",
-              active ? "bg-primary text-white" : "border border-border bg-card text-muted-foreground",
+              active && "bg-primary text-white",
+              done && "border border-trust bg-trust/8 text-trust",
+              !active && !done && "border border-border bg-card text-muted-foreground",
             )}
           >
+            {done && <Check size={14} strokeWidth={2.6} className="shrink-0" />}
             <span className="truncate">{item.label}</span>
           </button>
         );

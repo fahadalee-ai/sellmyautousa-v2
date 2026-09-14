@@ -408,6 +408,16 @@ export function bodyTypeFor(make: string, model: string): BodyType | undefined {
   return undefined;
 }
 
+/** Body styles sold for this make, or the one style for a specific model. */
+export function bodyTypesFor(make: string, model?: string): BodyType[] {
+  if (model) {
+    const exact = bodyTypeFor(make, model);
+    if (exact) return [exact];
+  }
+  const source = make && VEHICLES[make] ? VEHICLES[make] : Object.values(VEHICLES).flat();
+  return [...new Set(source.map((m) => m.bodyType))];
+}
+
 export const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "DCT"];
 export const FUEL_TYPES = ["Gasoline", "Diesel", "Hybrid", "Plug-in Hybrid", "Electric"];
 export const DRIVETRAINS = ["FWD", "RWD", "AWD", "4WD"];
