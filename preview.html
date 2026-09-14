@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sell My Auto USA</title>
-  <link rel="icon" href="/fav-icon_01.png" type="image/png" />
-  <link rel="shortcut icon" href="/favicon.png" type="image/png" />
-  <link rel="apple-touch-icon" href="/fav-icon_01.png" />
+  <title>Sell My Auto</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <style>
     :root {
       --bg: #0b0b0c;
@@ -47,14 +47,6 @@
     html,
     body {
       height: 100%;
-      overflow: hidden;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar {
-      display: none;
     }
 
     body {
@@ -153,8 +145,6 @@
       border: 0;
       display: block;
       background: #fff;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
     }
   </style>
 </head>
@@ -284,17 +274,15 @@
 
     <script>
       const APP_BASE = "/";
-      const PRODUCTION_URL = location.origin + APP_BASE;
 
-    function defaultAppUrl() {
-      // Never load preview.html itself in the iframe — that is not a router route.
-      if (location.protocol === "file:") {
-        return "http://127.0.0.1:8080" + APP_BASE;
+      function defaultPreviewUrl() {
+        if (location.protocol === "file:") {
+          return "http://localhost:5173/";
+        }
+        return new URL(APP_BASE, location.origin).href;
       }
-      return location.origin + APP_BASE;
-    }
 
-    function safeParseUrl(maybeUrl) {
+      function safeParseUrl(maybeUrl) {
       let url;
       try {
         url = new URL(maybeUrl);
@@ -310,9 +298,10 @@
       var isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
       if (isIOS) document.documentElement.classList.add("ios");
 
+      // Optional override: index.html?url=https%3A%2F%2Fexample.com
       const params = new URLSearchParams(location.search);
       const overrideUrl = params.get("url");
-      const finalUrl = safeParseUrl(overrideUrl) || defaultAppUrl();
+      const finalUrl = safeParseUrl(overrideUrl) || defaultPreviewUrl();
 
       // Set src only on the iframe that will actually be visible.
       if (isIOS) {
