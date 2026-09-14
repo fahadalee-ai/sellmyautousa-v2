@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sell My Auto</title>
+  <title>Glacial Enterprises</title>
+  <link rel="icon" href="/fav-icon_01.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/fav-icon_01.png" />
   <style>
     :root {
       --bg: #0b0b0c;
@@ -280,15 +282,19 @@
   </div>
 
     <script>
-      const APP_BASE = "/";
-      const PRODUCTION_URL = location.origin + APP_BASE;
+      const PRODUCTION_URL = location.origin + "/";
 
     function defaultAppUrl() {
-      // Never load preview.html itself in the iframe — that is not a router route.
       if (location.protocol === "file:") {
-        return "http://127.0.0.1:8080" + APP_BASE;
+        return "http://localhost:8080/";
       }
-      return location.origin + APP_BASE;
+      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+        return location.origin + "/";
+      }
+      if (location.pathname.endsWith("preview.html")) {
+        return location.origin + location.pathname.replace(/preview\.html$/, "");
+      }
+      return PRODUCTION_URL;
     }
 
     function safeParseUrl(maybeUrl) {
